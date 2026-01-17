@@ -452,8 +452,19 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 
 CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장하고, 다음 실행할 프로세스/스레드의 상태를 로드하여 교체하는 작업입니다.
 
-- **오버헤드**: 빈번한 컨텍스트 스위칭은 캐시 초기화 비용 등으로 성능 저하를 일으킴.
-- **스레드가 가벼운 이유**: 스레드는 공유 메모리를 사용하므로 컨텍스트 스위칭 시 메모리 영역 교체 비용이 적습니다.
+- **PCB (Process Control Block)**: 프로세스 상태 저장 (PC, Register, Memory 등). 무거움.
+- **TCB (Thread Control Block)**: 스레드 상태 저장 (PC, Register, Stack Pointer). 가벼움 (Code/Data/Heap 공유하므로).
+- **오버헤드**: 캐시 초기화 등 비용 발생. 스레드가 가벼운 이유는 공유 메모리 덕분에 TCB만 교체하면 되기 때문.
+
+</details>
+
+<details>
+<summary>캐시의 지역성(Locality)이란?</summary>
+
+프로그램이 데이터를 참조할 때 특정 패턴을 보이는 성질입니다. 이를 이용해 캐시 히트율(Hit Rate)을 높입니다.
+
+1. **시간 지역성 (Temporal Locality)**: 최근 사용한 데이터가 곧 다시 사용될 가능성이 높음 (예: 반복문의 변수).
+2. **공간 지역성 (Spatial Locality)**: 사용한 데이터의 **주변 데이터**가 곧 사용될 가능성이 높음 (예: 배열 접근).
 
 </details>
 
@@ -470,12 +481,14 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>동기화 문제: 뮤텍스와 세마포어의 차이는?</summary>
 
-- **Mutex** (Mutual Exclusion):
-  - **1개의 자원**에 대한 접근 제어 (Locking 메커니즘).
-  - 락을 건 스레드만이 락을 해제할 수 있음 (소유권 O).
-- **Semaphore**:
-  - **N개의 자원**에 대한 접근 제어 (Signaling 메커니즘).
-  - 카운터를 사용하여 여러 스레드 접근 제어 가능. 소유권 개념 없음.
+| 구분            | 뮤텍스 (Mutex)                     | 세마포어 (Semaphore)             |
+| --------------- | ---------------------------------- | -------------------------------- |
+| **동기화 대상** | **1개**                            | **N개**                          |
+| **소유권**      | **있음** (락을 건 놈만 풀 수 있음) | **없음** (누가 걸었든 해제 가능) |
+| **타입**        | Locking 메커니즘                   | Signaling 메커니즘               |
+
+- **Mutex**: 화장실 키 (1명만 사용, 키 가진 사람이 나와야 다음 사람 들어감).
+- **Semaphore**: 화장실 칸 수 (N명 사용, 빈 칸 수만큼 들어감).
 
 </details>
 
@@ -484,13 +497,15 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 두 개 이상의 프로세스가 서로 상대방의 자원을 점유한 채 무한정 기다리는 상태입니다.
 
-**발생 4대 조건**:
-1. **상호 배제** (Mutual Exclusion)
-2. **점유와 대기** (Hold and Wait)
-3. **비선점** (No Preemption)
-4. **순환 대기** (Circular Wait)
+**발생 4대 조건 (모두 만족해야 발생)**:
+1. **상호 배제** (Mutual Exclusion): 자원은 한 번에 한 프로세스만 사용 가능.
+2. **점유와 대기** (Hold and Wait): 자원을 가진 채 다른 자원을 기다림.
+3. **비선점** (No Preemption): 다른 프로세스의 자원을 뺏을 수 없음.
+4. **순환 대기** (Circular Wait): 꼬리에 꼬리를 물고 대기 (A->B, B->A).
 
-**해결**: 위 조건 중 하나를 깨뜨리거나, 회피 알고리즘(은행원 알고리즘) 등 사용.
+**해결 방법**:
+- **예방/회피**: 조건 중 하나를 깸 (예: 락 순서 정하기, 은행원 알고리즘).
+- **탐지/무시**: 데드락 발생 시 탐지하여 해당 프로세스 강제 종료 (MySQL은 탐지/롤백 방식 사용).
 
 </details>
 
@@ -521,7 +536,7 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 - 리프 노드끼리 Linked List로 연결되어 순차 탐색 빠름.
 - **Balanced Tree**로 조회 성능이 O(log N) 보장.
 
-**왜 중간 노드엔 키만 저장하나요?**: 하나의 디스크 블록에 더 많은 키를 담아 트리의 높이를 낮추기 위함입니다 (Disk I/O 감소).
+**왜 중간 노드엔 키만 저장하나요?**: 하나의 디스크 블록에 더 많은 키를 담아 트리의 높이를 낮추기 위함입니다 
 
 </details>
 
@@ -598,6 +613,89 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 </details>
 
 <details>
+<summary>MVCC (Multi-Version Concurrency Control) 란?</summary>
+
+**MySQL InnoDB**에서 락을 걸지 않고도 일관된 읽기를 제공하는 기술입니다.
+- **원리**: 데이터 업데이트 시, 이전 값을 **Undo Log**에 보관합니다. 다른 트랜잭션이 해당 데이터를 읽으려 하면 Undo Log에 있는 이전 버전을 보여줍니다.
+- **Snapshot Isolation**: 트랜잭션 시작 시점의 스냅샷을 보는 효과를 줍니다.
+- 이를 통해 `READ_COMMITTED`나 `REPEATABLE_READ` 격리 수준에서 **Non-Blocking Read**를 가능하게 합니다.
+
+</details>
+
+<details>
+<summary>Redis에 대해서 간단히 설명해주세요.</summary>
+
+> [!success] 면접 답변
+> "Redis는 **인메모리 Key-Value 저장소**로, **싱글 스레드 + 이벤트 루프**로 동작해 원자적 연산을 보장합니다. **RDB/AOF**로 영속성을 지원하고, 캐시, 세션, 실시간 랭킹에 사용됩니다."
+
+**주요 특징**:
+- **자료구조**: String, List, Set, Sorted Set, Hash 등 다양한 구조 지원.
+- **싱글 스레드**: 원자성(Atomic) 보장, Race Condition 적음. (하지만 O(N) 명령어 주의)
+- **영속성 (Persistence)**:
+  - **RDB**: 특정 시점의 스냅샷 저장 (빠른 복구, 데이터 유실 가능성).
+  - **AOF**: 모든 쓰기 명령 기록 (데이터 유실 적음, 파일 큼, 복구 느림).
+- **Cluster**: 데이터 샤딩 지원.
+
+</details>
+
+<details>
+<summary>Redis와 Memcached의 차이</summary>
+
+| 구분     | Redis                               | Memcached                   |
+| -------- | ----------------------------------- | --------------------------- |
+| 자료구조 | 다양한 자료구조 지원 (List, Set 등) | String만 지원               |
+| 영속성   | RDB, AOF 지원                       | 미지원 (메모리 날아가면 끝) |
+| 스레드   | 싱글 스레드                         | 멀티 스레드                 |
+| 용도     | 캐시 + 메시지큐, 랭킹, 세션 등      | 단순 캐싱                   |
+
+</details>
+
+<details>
+<summary>ElasticSearch에 대해서 설명해주세요.</summary>
+
+Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔진**입니다.
+
+- **역인덱스**: 키워드를 통해 문서를 찾는 방식 (책의 맨 뒤 '색인'과 유사). RDBMS의 `LIKE` 검색보다 훨씬 빠릅니다.
+- **특징**:
+  - **형태소 분석**: '먹었다', '먹으니' -> '먹다' 검색 가능.
+  - **분산 저장**: 데이터를 샤드(Shard) 단위로 쪼개어 여러 노드에 저장 (Scale-out 용이).
+  - **RESTful API**: HTTP로 통신.
+
+**RDBMS vs ElasticSearch 비교**:
+- RDBMS: 정확한 데이터 조작, 트랜잭션 위주. (`WHERE id = 1`)
+- ElasticSearch: 전문(Full-Text) 검색, 로그 분석, 비정형 데이터. (`"맛집" 검색`)
+
+</details>
+
+<details>
+<summary>MongoDB에 대해서 설명해주세요.</summary>
+
+**Document 지향 NoSQL** 데이터베이스입니다.
+
+- **특징**:
+  - **JSON(BSON)** 형식 저장: 스키마가 유연함 (Schema-less).
+  - **Sharding**: 대용량 데이터를 여러 서버에 분산 저장 용이.
+  - **Replica Set**: 자동 장애 복구(Failover) 및 고가용성 보장.
+- **사용처**: 로그 데이터, 비정형 데이터, 필드가 자주 변하는 서비스.
+
+</details>
+
+<details>
+<summary>CAP 이론이란?</summary>
+
+분산 시스템에서는 다음 3가지 중 **2가지만 만족할 수 있다**는 이론입니다.
+
+1. **C (Consistency, 일관성)**: 모든 노드가 같은 시간에 같은 데이터를 보여줌.
+2. **A (Availability, 가용성)**: 일부 노드가 죽어도 응답을 받을 수 있음.
+3. **P (Partition Tolerance, 분할 내성)**: 네트워크 단절이 일어나도 시스템이 동작함.
+
+**현실적인 선택**: P는 무조건 가져가야 하므로, **CP** or **AP** 중 선택.
+- **CP (RDBMS, HBase, Redis)**: 일관성 우선. 네트워크 끊기면 에러 반환.
+- **AP (Cassandra, DynamoDB)**: 가용성 우선. 네트워크 끊겨도 일단 응답 (나중에 동기화 - **Eventual Consistency**).
+
+</details>
+
+<details>
 <summary>Connection Pool (DBCP) 이란?</summary>
 
 데이터베이스 연결(Connection)을 맺는 과정은 비용(시간, 리소스)이 많이 듭니다.
@@ -642,7 +740,10 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 - **Survivor**: 살아남은 객체 이동.
 - **Old**: 오래 살아남은 객체 이동. 꽉 차면 **Major GC** (Full GC).
 
-**Stop-The-World**: GC 수행 중 애플리케이션 실행이 멈추는 현상. GC 튜닝은 이를 줄이는 것.
+**G1GC (Garbage First GC)**:
+- Heap을 **Region**이라는 논리적 단위로 나눔.
+- Garbage가 많은 Region부터 먼저 청소 (Garbage First).
+- **Stop-The-World** 시간이 짧고 예측 가능하여 대용량 메모리에 적합 (Java 9+ 기본값).
 
 </details>
 
@@ -660,8 +761,18 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 **HashMap**은 동기화되지 않음. **Hashtable**은 전체에 락을 걸어 느림.
 **ConcurrentHashMap**:
-- **Segment Lock** (Java 7): 큰 맵을 나누어 부분적으로 락.
-- **Bucket Lock / CAS** (Java 8+): 각 버킷(노드) 별로 락을 걸거나 CAS 사용. 동시성 성능 극대화.
+- **Java 7 (Segment Lock)**: 맵을 여러 세그먼트로 나누어 부분적으로 락을 걺.
+- **Java 8+ (Bucket Lock / CAS)**:
+  - 각 버킷(노드)의 첫 번째 노드에만 `synchronized`를 걸거나,
+  - **CAS (Compare-And-Swap)** 알고리즘을 사용하여 락 없이 원자적 연산 수행.
+
+</details>
+
+<details>
+<summary>HashMap의 내부 동작 원리와 해시 충돌 해결</summary>
+
+1. **해시 충돌 해결**: **Chaining** 방식 (LinkedList로 연결).
+2. **최적화 (Java 8+)**: 하나의 버킷에 데이터가 **8개 이상** 쌓이면 **Red-Black Tree**로 변환하여 탐색 속도를 `O(N)`에서 `O(log N)`으로 개선. (6개 이하가 되면 다시 LinkedList로 복귀)
 
 </details>
 
@@ -865,58 +976,99 @@ AOP 프록시를 통해 동작합니다.
 ## 6. Security & Infrastructure
 
 <details>
-<summary>OAuth 2.0 동작 흐름 (Authorization Code 방식)</summary>
+<summary>대칭키 vs 비대칭키 암호화</summary>
 
-1. **사용자**: "로그인" 버튼 클릭 -> 서비스가 **인증 서버**(카카오/구글) 로그인 페이지로 리다이렉트.
-2. **인증 서버**: 사용자 로그인 및 정보 제공 동의 -> 서비스에 **Authorization Code** 전달.
-3. **서비스**: Code를 인증 서버에 전달하고 **Access Token** 발급 요청.
-4. **인증 서버**: Token 발급.
-5. **서비스**: Access Token으로 사용자 정보 조회.
+- **대칭키**: 암/복호화 키가 같음. 빠르지만 키 전달 문제. (AES)
+- **비대칭키**: 공개키/개인키. 느리지만 키 전달 안전. (RSA)
 
 </details>
 
 <details>
-<summary>JWT (Json Web Token)의 구조와 장단점</summary>
+<summary>단방향 암호화 (Hashing)</summary>
 
-- **구조**: `Header` (알고리즘), `Payload` (데이터/Claim), `Signature` (서명).
-- **장점**: Stateless(서버 저장소 불필요), 확장성 좋음.
-- **단점**: 토큰 크기가 큼, 한 번 발급되면 만료 전까지 취소 불가능 (Blacklist 필요).
-
-</details>
-
-<details>
-<summary>SQL Injection과 방어 방법</summary>
-
-악의적인 SQL 구문을 주입하여 DB 데이터를 조작하는 공격.
-**방어**:
-- **PreparedStatement** 사용 (바인딩 변수 사용, 컴파일 시점에 쿼리 구조 고정).
-- ORM (JPA) 사용.
+복호화가 불가능한 암호화. 비밀번호 저장에 사용.
+- **Salt**: 같은 비밀번호라도 다른 해시값이 나오도록 랜덤 문자열 추가.
+- **Rainbow Table** 공격 방어.
 
 </details>
 
 <details>
-<summary>XSS (Cross Site Scripting)와 CSRF (Cross Site Request Forgery)</summary>
+<summary>JWT (JSON Web Token)</summary>
 
-- **XSS**: 악성 스크립트를 웹 페이지에 삽입하여 사용자 정보를 탈취.
-  - 방어: 입력값 HTML 엔티티 코드로 변환 (`<` -> `&lt;`).
-- **CSRF**: 사용자가 의도치 않게 공격자가 심어둔 요청을 서버로 보내게 함.
-  - 방어: Referer 검증, CSRF Token 사용.
+Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 담아 검증.
+- 구성: Header . Payload(Claim) . Signature
+- Access Token의 만료 기간을 짧게 잡고 Refresh Token을 병행 사용하여 보안성을 높임.
 
 </details>
 
 <details>
-<summary>CI/CD, Docker, Load Balancer 개념</summary>
+<summary>OAuth 2.0 흐름</summary>
+
+제3자 애플리케이션이 사용자 비밀번호 없이 서비스 접근 권한을 얻는 표준.
+1. Client가 Resource Owner(사용자)에게 권한 요청
+2. 사용자가 승인하면 Auth Server가 **Authorization Code** 발급
+3. Client가 Code로 **Access Token** 교환
+4. Token으로 Resource Server 이용
+
+</details>
+
+<details>
+<summary>SQL Injection & XSS</summary>
+
+- **SQL Injection**: 입력값에 SQL 구문을 삽입해 DB 조작. -> **Prepared Statement**로 방어.
+- **XSS** (Cross Site Scripting): 악성 스크립트 실행 공격. -> **입력값 검증 및 Escaping**으로 방어.
+
+</details>
+
+<details>
+<summary>CI/CD, Docker, Load Balancer</summary>
 
 - **CI/CD**: 지속적 통합 및 배포 자동화 파이프라인.
 - **Docker**: 환경에 구애받지 않고 애플리케이션을 실행하는 컨테이너 기술.
 - **Load Balancer**: 트래픽을 여러 서버로 분산 (L4: IP/Port, L7: URL/Header).
-- **Monolithic Architecture vs Microservice Architecture (MSA)**
-    - **Monolithic**: 모든 모듈이 하나의 서비스(프로젝트) 안에 통합된 구조.
-      - 장점: 개발/배포/테스트가 단순함.
-      - 단점: 부분 장애가 전체에 영향, 빌드/배포 시간 증가, 기술 스택 변경 어려움.
-    - **MSA**: 서비스를 기능별로 작게 나누어 독립적으로 배포/실행하는 구조 (API 통신).
-      - 장점: 유연한 기술 선택, 개별 배포 가능, 장애 격리.
-      - 단점: 복잡한 트랜잭션 관리, 서비스 간 통신 비용, 운영 복잡도 증가.
+
+</details>
+
+<details>
+<summary>Monolithic Architecture vs Microservice Architecture (MSA)</summary>
+
+- **Monolithic**: 모든 모듈이 하나의 서비스(프로젝트) 안에 통합된 구조.
+  - 장점: 개발/배포/테스트가 단순함.
+  - 단점: 부분 장애가 전체에 영향, 빌드/배포 시간 증가, 기술 스택 변경 어려움.
+- **MSA**: 서비스를 기능별로 작게 나누어 독립적으로 배포/실행하는 구조 (API 통신).
+  - 장점: 유연한 기술 선택, 개별 배포 가능, 장애 격리.
+  - 단점: 복잡한 트랜잭션 관리, 서비스 간 통신 비용, 운영 복잡도 증가.
+
+</details>
+
+<details>
+<summary>분산 락 (Distributed Lock) 구현 방법</summary>
+
+여러 서버에서 공유 자원에 동시 접근할 때 정합성을 맞추기 위해 사용합니다.
+
+1. **Redis (Spin Lock / Pub-Sub)**:
+   - `SETNX` (Set if Not Exists) 명령어로 락 획득 시도.
+   - **Redisson** 라이브러리: Pub-Sub 방식으로 재시도 부하를 줄이고, 타임아웃/자동 만료 기능 제공.
+2. **DB (Named Lock / Pessimistic Lock)**:
+   - `GET_LOCK()` 함수 등을 사용하여 DB 차원의 락 사용.
+3. **ZooKeeper**: 순차 노드를 생성하여 가장 낮은 번호의 노드가 락 획득.
+
+</details>
+
+<details>
+<summary>Scale-up vs Scale-out</summary>
+
+- **Scale-up (수직 확장)**: 서버 자체의 성능(CPU, RAM)을 업그레이드. (한계 비용 높음, 단일 장애점)
+- **Scale-out (수평 확장)**: 서버의 대수(Instance)를 늘림. (로드밸런싱 필요, 무한 확장 가능, MSA에 적합)
+
+</details>
+
+<details>
+<summary>시스템 확장성과 샤딩(Sharding)</summary>
+
+**샤딩**: 대용량 데이터를 여러 DB에 분산 저장하는 기술.
+- **Shard Key**: 데이터를 나누는 기준 (예: `user_id % 4`).
+- **단점**: Join이 어렵고, 트랜잭션 관리가 복잡해짐. Rebalancing(데이터 재분배)이 어려움.
 
 </details>
 
@@ -945,8 +1097,8 @@ AOP 프록시를 통해 동작합니다.
 <details>
 <summary>Git Merge와 Rebase의 차이</summary>
 
-- **Merge**: 두 브랜치의 변경 사항을 합쳐 **새로운 커밋(Merge Commit)**을 생성. 히스토리가 그대로 남음(비선형).
-- **Rebase**: 현재 브랜치의 베이스를 대상 브랜치의 최신 커밋으로 이동. 히스토리를 **한 줄로 깔끔하게 정렬(선형)**하지만, 기존 커밋 해시가 변경됨(공유 브랜치에서 주의).
+- **Merge**: 두 브랜치의 변경 사항을 합쳐 **새로운 커밋**(Merge Commit)을 생성. 히스토리가 그대로 남음(비선형).
+- **Rebase**: 현재 브랜치의 베이스를 대상 브랜치의 최신 커밋으로 이동. 히스토리를 **한 줄로 깔끔하게 정렬**(선형)하지만, 기존 커밋 해시가 변경됨(공유 브랜치에서 주의).
 
 </details>
 
@@ -962,7 +1114,7 @@ AOP 프록시를 통해 동작합니다.
 <details>
 <summary>프레임워크(Framework)와 라이브러리(Library)의 차이</summary>
 
-**제어의 흐름(Inversion of Control)**이 누구에게 있느냐의 차이입니다.
+**제어의 흐름**(Inversion of Control)이 누구에게 있느냐의 차이입니다.
 
 - **Library**: 개발자가 흐름을 제어하며, 필요할 때 라이브러리의 코드를 호출해 사용합니다. (개발자 -> 코드)
 - **Framework**: 프레임워크가 흐름을 제어하며, 개발자가 작성한 코드를 프레임워크가 호출해 실행합니다. (프레임워크 -> 코드)
@@ -978,8 +1130,12 @@ AOP 프록시를 통해 동작합니다.
   - **Async**: 요청 후 결과를 기다리지 않고 다음 작업 수행. 결과는 콜백(Callback)이나 이벤트로 받음.
   
 - **블로킹과 논블로킹** (제어권):
-  - **Blocking**: 다른 작업이 끝날 때까지 제어권을 넘겨주지 않고 대기.
-  - **Non-blocking**: 제어권을 바로 반환하여 다른 작업을 할 수 있게 함.
+  - **Blocking**: 다른 작업이 끝날 때까지 제어권을 넘겨주지 않고 대기. (BIO - `InputStream.read()`)
+  - **Non-blocking**: 제어권을 바로 반환하여 다른 작업을 할 수 있게 함. (NIO - `Selector` 사용)
+
+> **BIO vs NIO**:
+> - **BIO (Blocking I/O)**: 스레드 1개당 연결 1개 담당. 접속 많으면 스레드 폭발.
+> - **NIO (Non-blocking I/O)**: **Selector**가 여러 채널의 이벤트를 감시하고, **단일 스레드(Event Loop)**가 이벤트를 처리. 적은 스레드로 대량의 연결 처리 가능 (Tomcat NIO Connector, Netty, Node.js).
 
 > **자주 묻는 예**: Node.js는 Single Thread 기반의 **Non-blocking I/O** 모델을 사용하여 높은 처리량을 가집니다.
 
