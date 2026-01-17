@@ -627,6 +627,9 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>가상 메모리와 페이지 폴트(Page Fault) 과정</summary>
 
+<img width="666" height="556" alt="image" src="https://github.com/user-attachments/assets/6cce299a-6c92-409c-acd0-6d11c096209f" />
+
+
 <br>
 
 **가상 메모리**: 물리 메모리보다 큰 프로그램을 실행하기 위해 디스크 공간을 메모리처럼 사용하는 기술.
