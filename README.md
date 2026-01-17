@@ -812,6 +812,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
+<br>
+
 - **Replication** (복제):
   - **Master-Slave** 구조. Master는 쓰기(Insert/Update/Delete), Slave는 읽기(Select) 담당.
   - 데이터 백업 및 읽기 분산 처리로 성능 향상. 동기화 지연 발생 가능.
@@ -829,6 +831,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
+<br>
+
 1. `.java` 소스코드 -> `javac` 컴파일 -> `.class` 바이트코드
 2. **JVM**(Class Loader)이 바이트코드 로드
 3. **Execution Engine** (Interpreter + **JIT Compiler**)이 기계어로 변환 실행
@@ -839,6 +843,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>GC (Garbage Collection) 란?</summary>
+
+<br>
 
 <br>
 
@@ -861,6 +867,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
+<br>
+
 - **Synchronized**: 락(Lock)을 걸어 한 번에 하나의 스레드만 접근 허용 (가시성 + 원자성 보장).
 - **Volatile**: CPU 캐시가 아닌 **메인 메모리에서 직접 읽기/쓰기** (가시성 보장, 원자성 보장 X). 상태 플래그 용도로 적합.
 - **Atomic Class**: CAS 알고리즘으로 락 없이 스레드 안전한 연산 제공.
@@ -869,6 +877,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>동시성 로직에 쓰이는 자료구조 (ConcurrentHashMap)</summary>
+
+<br>
 
 <br>
 
@@ -884,6 +894,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>HashMap의 내부 동작 원리와 해시 충돌 해결</summary>
 
+<br>
+
 1. **해시 충돌 해결**: **Chaining** 방식 (LinkedList로 연결).
 2. **최적화 (Java 8+)**: 하나의 버킷에 데이터가 **8개 이상** 쌓이면 **Red-Black Tree**로 변환하여 탐색 속도를 `O(N)`에서 `O(log N)`으로 개선. (6개 이하가 되면 다시 LinkedList로 복귀)
 
@@ -891,6 +903,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>String, StringBuilder, StringBuffer</summary>
+
+<br>
 
 - **String**: **불변**(Immutable). 연산 시 매번 새 객체 생성.
 - **StringBuilder**: **가변**. 동기화 없음. 단일 스레드에서 빠름.
@@ -901,6 +915,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Interface vs Abstract Class</summary>
 
+<br>
+
 - **Interface**: "구현 명세(Can-do)". 다중 상속 가능. 상수와 추상 메서드 위주 (Java 8부터 default 메서드 가능).
 - **Abstract Class**: "공통 기능 추상화(Is-a)". 단일 상속. 상태(멤버 변수)를 가질 수 있음.
 
@@ -908,6 +924,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>제네릭(Generics)과 타입 소거(Type Erasure)</summary>
+
+<br>
 
 - **제네릭**: 컴파일 타임에 타입을 체크하여 타입 안정성을 높이고 형변환 번거로움을 줄임.
 - **타입 소거**: 컴파일 후 런타임에는 제네릭 타입 정보가 제거됨(`List<String>` -> `List`). Java 하위 호환성을 위함.
@@ -917,6 +935,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Checked vs Unchecked Exception</summary>
 
+<br>
+
 - **Checked**: `Exception` 상속. **반드시 처리(try-catch)해야 함**. (IOException 등)
 - **Unchecked**: `RuntimeException` 상속. 명시적 처리 강제 안 함. (NullPointerException 등)
 - Spring 트랜잭션 롤백은 기본적으로 **Unchecked Exception**에서만 발생.
@@ -925,6 +945,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>equals()와 hashCode()의 관계는?</summary>
+
+<br>
 
 - **equals()**: 두 객체의 **논리적 동등성**(값의 일치)을 비교.
 - **hashCode()**: 객체를 식별하는 **정수값**을 반환 (해시 테이블 등에서 사용).
@@ -938,6 +960,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Primitive Type과 Wrapper Class의 차이</summary>
 
+<br>
+
 - **Primitive Type** (기본형): `int`, `long`, `boolean` 등. **Stack** 메모리에 실제 값 저장. `null` 불가. 산술 연산 빠름.
 - **Wrapper Class**: `Integer`, `Long`, `Boolean` 등. **Heap** 메모리에 객체로 저장. `null` 가능. Collection(`<Integer>` 등)에서 사용.
 - **Auto-Boxing / Unboxing**: Java 5부터 컴파일러가 자동으로 변환해줌.
@@ -946,6 +970,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>static 키워드의 의미와 메모리 위치</summary>
+
+<br>
 
 - **static**: 객체 생성이 아닌 **클래스에 속한** 멤버임을 명시.
 - **메모리**: 프로그램 시작 시 **Method Area** (Static Area)에 할당되고, 프로그램 종료 시 해제됨.
@@ -956,6 +982,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Java 8의 대표적인 특징 (Stream, Lambda, Optional)</summary>
 
+<br>
+
 1. **Lambda Expression**: 함수형 프로그래밍 지원. 익명 클래스를 간결하게 표현. `(a, b) -> a + b`
 2. **Stream API**: 컬렉션 데이터를 선언형으로 처리. 병렬 처리 용이. `list.stream().filter(...).map(...).collect(...)`
 3. **Optional**: NullPointerException 방지를 위한 Wrapper 클래스. 명시적으로 `null` 가능성을 표현. `Optional.ofNullable(...)`
@@ -964,6 +992,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>Java의 Call by Value vs Call by Reference</summary>
+
+<br>
 
 Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 
@@ -977,6 +1007,8 @@ Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 <details>
 <summary>Reflection(리플렉션) 이란?</summary>
 
+<br>
+
 구체적인 클래스 타입을 알지 못해도, 컴파일 된 바이트 코드를 통해 해당 클래스의 메서드, 타입, 변수(private 포함)들에 접근할 수 있도록 해주는 자바 API입니다.
 - **사용처**: Spring Framework의 DI(@Autowired), JPA 엔티티 바인딩 등 프레임워크 내부에서 주로 사용됨.
 - **단점**: 오버헤드가 있어 성능 저하 가능성, 캡슐화 저해.
@@ -986,6 +1018,8 @@ Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 <details>
 <summary>final 키워드의 사용법</summary>
 
+<br>
+
 1. **final variable**: 값을 변경할 수 없는 상수 (재할당 불가).
 2. **final method**: 오버라이딩(Overriding) 불가.
 3. **final class**: 상속(Inheritance) 불가.
@@ -994,6 +1028,8 @@ Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 
 <details>
 <summary>직렬화(Serialization) 란?</summary>
+
+<br>
 
 자바 객체를 **바이트 스트림**으로 변환하여 파일 저장하거나 네트워크로 전송할 수 있게 하는 것.
 - `implements Serializable` 인터페이스 필요.
@@ -1007,12 +1043,16 @@ Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 <details>
 <summary>Spring MVC 요청 처리 흐름</summary>
 
+<br>
+
 Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **HandlerAdapter** -> **Controller**(비즈니스 로직) -> **ViewResolver** -> View/Data Response
 
 </details>
 
 <details>
 <summary>IoC (Inversion of Control) 와 DI (Dependency Injection)</summary>
+
+<br>
 
 - **IoC**(제어의 역전): 객체의 생명주기 관리를 개발자가 아닌 프레임워크(Container)가 담당.
 - **DI**(의존성 주입): 필요한 의존 객체를 직접 생성하지 않고 외부(Container)에서 주입받음. 결합도를 낮춤.
@@ -1023,12 +1063,16 @@ Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **Ha
 <details>
 <summary>Spring Bean 생명주기</summary>
 
+<br>
+
 생성 -> 의존성 주입 -> 초기화(@PostConstruct) -> 사용 -> 소멸(@PreDestroy)
 
 </details>
 
 <details>
 <summary>AOP (Aspect Oriented Programming)</summary>
+
+<br>
 
 핵심 로직과 공통 관심사(로깅, 트랜잭션, 보안 등)를 분리하여 모듈화하는 것.
 Spring은 프록시 패턴을 사용하여 AOP를 구현합니다.
@@ -1037,6 +1081,8 @@ Spring은 프록시 패턴을 사용하여 AOP를 구현합니다.
 
 <details>
 <summary>@Transactional 동작 원리</summary>
+
+<br>
 
 AOP 프록시를 통해 동작합니다.
 1. 메서드 호출 시 프록시가 가로챔.
@@ -1048,6 +1094,8 @@ AOP 프록시를 통해 동작합니다.
 
 <details>
 <summary>JPA N+1 문제와 해결 방법</summary>
+
+<br>
 
 **N+1 문제**: 1번의 쿼리로 조회한 엔티티와 연관된 엔티티를 조회하기 위해 N번의 추가 쿼리가 발생하는 성능 이슈.
 
@@ -1061,6 +1109,8 @@ AOP 프록시를 통해 동작합니다.
 <details>
 <summary>Filter vs Interceptor</summary>
 
+<br>
+
 - **Filter**: Servlet Container 레벨 (DispatcherServlet 앞). 보안, 인코딩 처리.
 - **Interceptor**: Spring MVC 레벨 (DispatcherServlet 뒤, Controller 앞). 인증, 로깅, 공통 로직 처리.
 
@@ -1068,6 +1118,8 @@ AOP 프록시를 통해 동작합니다.
 
 <details>
 <summary>Spring과 Spring Boot의 차이점</summary>
+
+<br>
 
 - **Spring Boot**는 Spring 프레임워크를 더 쉽게 사용할 수 있게 해주는 도구입니다.
 - **주요 차이**:
@@ -1080,6 +1132,8 @@ AOP 프록시를 통해 동작합니다.
 <details>
 <summary>POJO (Plain Old Java Object)와 PSA (Portable Service Abstraction)</summary>
 
+<br>
+
 - **POJO**: 특정 프레임워크나 기술에 종속되지 않은 순수한 자바 객체. (객체지향 설계 원칙 준수 용이)
 - **PSA**: 환경과 구현 기술의 변경과 무관하게 일관된 접근 방식을 제공하는 추상화 구조.
   - 예: `@Transactional` (JDBC, JPA, Hibernate 어떤 기술을 쓰든 동일한 방식으로 트랜잭션 제어), Spring Cache, Spring Web MVC.
@@ -1091,6 +1145,8 @@ AOP 프록시를 통해 동작합니다.
 <details>
 <summary>대칭키 vs 비대칭키 암호화</summary>
 
+<br>
+
 - **대칭키**: 암/복호화 키가 같음. 빠르지만 키 전달 문제. (AES)
 - **비대칭키**: 공개키/개인키. 느리지만 키 전달 안전. (RSA)
 
@@ -1098,6 +1154,8 @@ AOP 프록시를 통해 동작합니다.
 
 <details>
 <summary>단방향 암호화 (Hashing)</summary>
+
+<br>
 
 복호화가 불가능한 암호화. 비밀번호 저장에 사용.
 - **Salt**: 같은 비밀번호라도 다른 해시값이 나오도록 랜덤 문자열 추가.
@@ -1108,6 +1166,8 @@ AOP 프록시를 통해 동작합니다.
 <details>
 <summary>JWT (JSON Web Token)</summary>
 
+<br>
+
 Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 담아 검증.
 - 구성: Header . Payload(Claim) . Signature
 - Access Token의 만료 기간을 짧게 잡고 Refresh Token을 병행 사용하여 보안성을 높임.
@@ -1116,6 +1176,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>OAuth 2.0 흐름</summary>
+
+<br>
 
 제3자 애플리케이션이 사용자 비밀번호 없이 서비스 접근 권한을 얻는 표준.
 1. Client가 Resource Owner(사용자)에게 권한 요청
@@ -1128,6 +1190,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <details>
 <summary>SQL Injection & XSS</summary>
 
+<br>
+
 - **SQL Injection**: 입력값에 SQL 구문을 삽입해 DB 조작. -> **Prepared Statement**로 방어.
 - **XSS** (Cross Site Scripting): 악성 스크립트 실행 공격. -> **입력값 검증 및 Escaping**으로 방어.
 
@@ -1135,6 +1199,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>CI/CD, Docker, Load Balancer</summary>
+
+<br>
 
 - **CI/CD**: 지속적 통합 및 배포 자동화 파이프라인.
 - **Docker**: 환경에 구애받지 않고 애플리케이션을 실행하는 컨테이너 기술.
@@ -1144,6 +1210,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>Monolithic Architecture vs Microservice Architecture (MSA)</summary>
+
+<br>
 
 - **Monolithic**: 모든 모듈이 하나의 서비스(프로젝트) 안에 통합된 구조.
   - 장점: 개발/배포/테스트가 단순함.
@@ -1156,6 +1224,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>분산 락 (Distributed Lock) 구현 방법</summary>
+
+<br>
 
 여러 서버에서 공유 자원에 동시 접근할 때 정합성을 맞추기 위해 사용합니다.
 
@@ -1171,6 +1241,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <details>
 <summary>Scale-up vs Scale-out</summary>
 
+<br>
+
 - **Scale-up (수직 확장)**: 서버 자체의 성능(CPU, RAM)을 업그레이드. (한계 비용 높음, 단일 장애점)
 - **Scale-out (수평 확장)**: 서버의 대수(Instance)를 늘림. (로드밸런싱 필요, 무한 확장 가능, MSA에 적합)
 
@@ -1178,6 +1250,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>시스템 확장성과 샤딩(Sharding)</summary>
+
+<br>
 
 **샤딩**: 대용량 데이터를 여러 DB에 분산 저장하는 기술.
 - **Shard Key**: 데이터를 나누는 기준 (예: `user_id % 4`).
@@ -1189,6 +1263,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>Array와 LinkedList의 차이점</summary>
+
+<br>
 
 | 구분          | Array (배열)            | LinkedList (연결 리스트)                 |
 | ------------- | ----------------------- | ---------------------------------------- |
@@ -1202,6 +1278,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <details>
 <summary>Stack과 Queue의 차이</summary>
 
+<br>
+
 - **Stack**: **LIFO** (Last In First Out). 나중에 들어간 게 먼저 나옴. (함수 호출 스택, 뒤로가기)
 - **Queue**: **FIFO** (First In First Out). 먼저 들어간 게 먼저 나옴. (작업 큐, 프린터 대기열)
 
@@ -1209,6 +1287,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>Git Merge와 Rebase의 차이</summary>
+
+<br>
 
 - **Merge**: 두 브랜치의 변경 사항을 합쳐 **새로운 커밋**(Merge Commit)을 생성. 히스토리가 그대로 남음(비선형).
 - **Rebase**: 현재 브랜치의 베이스를 대상 브랜치의 최신 커밋으로 이동. 히스토리를 **한 줄로 깔끔하게 정렬**(선형)하지만, 기존 커밋 해시가 변경됨(공유 브랜치에서 주의).
@@ -1218,6 +1298,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <details>
 <summary>디자인 패턴 (Singleton, Strategy, Factory)</summary>
 
+<br>
+
 1. **Singleton**: 클래스의 인스턴스를 **오직 하나만** 생성하여 전역에서 공유. (DB 커넥션 풀, 설정 관리)
 2. **Strategy**: 알고리즘(전략)을 객체로 캡슐화하여 런타임에 교체 가능하도록 함. (결제 방식 선택, 정렬 알고리즘 교체)
 3. **Factory Method**: 객체 생성을 서브클래스에 위임하여 구체적인 클래스 의존성을 낮춤.
@@ -1226,6 +1308,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>프레임워크(Framework)와 라이브러리(Library)의 차이</summary>
+
+<br>
 
 **제어의 흐름**(Inversion of Control)이 누구에게 있느냐의 차이입니다.
 
@@ -1237,6 +1321,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>동기(Synchronous) vs 비동기(Asynchronous) / 블로킹(Blocking) vs 논블로킹(Non-blocking)</summary>
+
+<br>
 
 - **동기와 비동기** (순서와 결과):
   - **Sync**: 요청 후 결과를 받을 때까지 대기하거나, 계속 확인(Polling). 순서가 보장됨.
@@ -1257,6 +1343,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <details>
 <summary>TDD (Test Driven Development) 란?</summary>
 
+<br>
+
 **테스트 주도 개발**: 실제 코드를 작성하기 전에 **테스트 코드를 먼저 작성**하는 개발 방식.
 - **Cycle**: Red(실패하는 테스트) -> Green(테스트 통과를 위한 최소 코드) -> Refactor(코드 개선).
 - **장점**: 코드 품질 향상, 디버깅 시간 단축, 문서화 효과.
@@ -1266,6 +1354,8 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <details>
 <summary>컴파일 타임(Compile Time)과 런타임(Runtime)의 차이</summary>
+
+<br>
 
 - **Compile Time**: 소스 코드를 기계어(또는 바이트코드)로 변환하는 시점.
   - 에러: 문법 오류, 타입 체크 (`Syntax Error`) -> 발견하기 쉽고 안전함.
