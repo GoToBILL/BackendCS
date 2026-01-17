@@ -7,7 +7,7 @@
 
 **1. URL 파싱 및 DNS 조회**:
 - 브라우저가 URL을 파싱하여 프로토콜(HTTPS), 도메인(www.google.com), 경로(/) 분리
-- DNS Lookup 수행: 브라우저 캐시 -> OS 캐시 -> hosts 파일 -> DNS 서버 순서
+- DNS Lookup 수행: 브라우저 캐시 -> hosts 파일 -> OS 캐시 -> DNS 서버 순서
 - DNS 서버에서 도메인에 해당하는 IP 주소 반환
 
 **2. TCP 연결 수립** (3-Way Handshake):
