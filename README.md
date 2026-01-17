@@ -3,6 +3,8 @@
 <details>
 <summary>웹 통신의 큰 흐름: https://www.google.com/ 을 접속할 때 일어나는 일</summary>
 
+<br>
+
 **1. URL 파싱 및 DNS 조회**:
 - 브라우저가 URL을 파싱하여 프로토콜(HTTPS), 도메인(www.google.com), 경로(/) 분리
 - DNS Lookup 수행: 브라우저 캐시 -> OS 캐시 -> hosts 파일 -> DNS 서버 순서
@@ -47,6 +49,8 @@ Accept: text/html
 <details>
 <summary>OSI 7계층과 그 존재 이유, TCP/IP 4계층에 대해 설명해주세요</summary>
 
+<br>
+
 <img width="1260" height="1249" alt="image" src="https://github.com/user-attachments/assets/8e209b0a-73c7-455d-b643-3791f4f27a44" />
 
 
@@ -80,6 +84,8 @@ Accept: text/html
 
 <details>
 <summary>소켓이 열리고 나서 서버-클라이언트가 요청되는 과정을 OSI 계층과 연관지어 설명해주세요</summary>
+
+<br>
 
 **송신 측** (데이터 전송):
 
@@ -116,6 +122,8 @@ IP 헤더 추가 (출발지/목적지 IP 주소, TTL)
 <details>
 <summary>소켓을 통해 서버-클라이언트가 연결되기 위한 시스템콜을 설명해주세요</summary>
 
+<br>
+
 **서버 측**:
 ```c
 // 1. 소켓 생성 (전화기 구입)
@@ -145,6 +153,8 @@ write/read...
 <details>
 <summary>서버에서 accept() 시 소켓을 새로 만드는데, 그럼 서버 소켓은 2개인가요?</summary>
 
+<br>
+
 네, 역할이 다른 **두 종류의 소켓**이 존재합니다.
 
 1. **Listening Socket** (리스닝 소켓):
@@ -160,6 +170,8 @@ write/read...
 
 <details>
 <summary>클라이언트가 1000명 연결되면 TCP 버퍼도 1000개 생기나요?</summary>
+
+<br>
 
 네, 맞습니다. **연결(Connected Socket)당 버퍼 1쌍**이 생성됩니다.
 
@@ -178,6 +190,8 @@ write/read...
 
 <details>
 <summary>포트는 0~65535번 구멍밖에 없는데, 7만 명이 동시 접속하면 어떻게 되나요?</summary>
+
+<br>
 
 **결론부터 말하면: 접속 가능합니다.** (서버의 포트가 부족해서 못 받는 일은 없습니다.)
 
@@ -200,6 +214,8 @@ TCP 연결은 아래 5가지 정보(5-Tuple)로 식별됩니다.
 <details>
 <summary>그럼 accept()로 만든 새로운 소켓은 포트를 새로 할당받나요? (포트 소모)</summary>
 
+<br>
+
 **아니요! 포트를 새로 할당받지 않습니다.**
 이 부분이 가장 많이 오해하는 부분입니다.
 
@@ -212,6 +228,8 @@ TCP 연결은 아래 5가지 정보(5-Tuple)로 식별됩니다.
 
 <details>
 <summary>소켓을 생성하는데 포트를 안 쓴다는 게 무슨 말인가요? 소켓은 포트가 있어야 하잖아요?</summary>
+
+<br>
 
 여기서 중요한 개념은 **소켓은 포트 그 자체가 아니라, '파일(객체)'이다** 라는 점입니다.
 
@@ -234,6 +252,8 @@ TCP 연결은 아래 5가지 정보(5-Tuple)로 식별됩니다.
 
 <details>
 <summary>웹 서버 소프트웨어(Apache, Nginx)는 OSI 7계층 중 어디서 작동하나요?</summary>
+
+<br>
 
 Apache와 Nginx는 **7계층** (Application Layer)에서 동작합니다.
 
@@ -264,6 +284,8 @@ Apache와 Nginx는 **7계층** (Application Layer)에서 동작합니다.
 <details>
 <summary>UDP는 그럼 신뢰성이 없나요?</summary>
 
+<br>
+
 UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨에서 신뢰성을 구현**할 수 있습니다.
 
 **UDP를 사용하면서 신뢰성을 확보하는 방법**:
@@ -274,6 +296,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 <details>
 <summary>TCP에서 신뢰성을 제어하기 위해 어떤 것을 하나요?</summary>
 
+<br>
+
 1. **3-Way Handshake**: 연결 수립 시 양방향 통신 가능 여부 확인
 2. **흐름 제어** (Flow Control): Sliding Window로 수신자 버퍼 상태에 맞춰 전송량 조절
 3. **혼잡 제어** (Congestion Control): Slow Start, Congestion Avoidance로 네트워크 혼잡 방지
@@ -283,6 +307,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 <details>
 <summary>TCP의 흐름 제어(Flow Control)와 혼잡 제어(Congestion Control) 기법들</summary>
+
+<br>
 
 **1. 흐름 제어 (Flow Control)**: 송신 측과 **수신 측**의 속도 차이 해결
 - **Stop and Wait**: 매번 응답(ACK)을 받고나서 다음 패킷 전송. (비효율)
@@ -302,6 +328,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 <details>
 <summary>TCP 3-Way Handshake, 4-Way Handshake에 대해서 설명해주세요</summary>
 
+<br>
+
 **3-Way Handshake** (연결 수립):
 1. Client -> Server: **SYN** (접속 요청)
 2. Server -> Client: **SYN + ACK** (요청 수락)
@@ -319,6 +347,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 <details>
 <summary>HTTP와 HTTPS의 차이점에 대해서 설명해주세요</summary>
 
+<br>
+
 | 구분 | HTTP             | HTTPS                 |
 | ---- | ---------------- | --------------------- |
 | 포트 | 80               | 443                   |
@@ -334,6 +364,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 <details>   
 <summary>HTTPS의 SSL Handshake 과정을 설명해주세요</summary>
 
+<br>
+
 <img width="1200" height="1272" alt="image" src="https://github.com/user-attachments/assets/24869ccc-a42c-4563-8e47-b1650e767ccf" />
 
 1. **Client Hello**: 지원 암호화 방식, 랜덤값 전송
@@ -348,6 +380,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 <details>
 <summary>왜 처음엔 비대칭키를 쓰고 나중엔 대칭키로 이루어지나요?</summary>
 
+<br>
+
 **Hybrid 방식의 이유**:
 1. **비대칭키(공개키)**: 키 교환에 안전하지만, **복잡한 수학적 연산(소인수분해, 타원곡선 등)이 필요해 CPU 부하가 크고 매우 느림**.
 2. **대칭키**: **단순한 비트 연산(XOR, Shift)이나 CPU 하드웨어 가속(AES-NI)**을 사용하므로 **매우 빠름**.
@@ -358,6 +392,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 <details>
 <summary>HTTP 버전별 차이를 설명해주세요</summary>
+
+<br>
 
 <img width="783" height="461" alt="image" src="https://github.com/user-attachments/assets/aeb07f7b-4991-4709-8c8e-6ab9a754bc15" />
 
@@ -372,6 +408,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 <details>
 <summary>HTTP 상태 코드(Status Code)에 대해 설명해주세요</summary>
 
+<br>
+
 - **2xx** (Success): 요청 성공 (200 OK, 201 Created)
 - **3xx** (Redirection): 페이지 이동 필요 (301 Moved Permanently, 302 Found)
 - **4xx** (Client Error): 클라이언트 잘못 (400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found)
@@ -381,6 +419,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 <details>
 <summary>GET과 POST의 차이점에 대해서 설명해주세요</summary>
+
+<br>
 
 | 구분        | GET                   | POST                 |
 | ----------- | --------------------- | -------------------- |
@@ -393,6 +433,8 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 <details>
 <summary>RESTful이란 무엇이며 특징을 설명해주세요</summary>
+
+<br>
 
 **REST** (Representational State Transfer):
 HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행위를 정하는 아키텍처 스타일입니다.
@@ -407,6 +449,8 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 <details>
 <summary>CORS란 무엇이며 설명해주세요</summary>
 
+<br>
+
 **CORS** (Cross-Origin Resource Sharing):
 보안상 브라우저는 다른 출처(도메인, 포트 등)의 리소스 요청을 차단합니다(SOP). 이를 허용해주기 위해 서버가 응답 헤더에 "이 출처는 허용한다"라고 알려주는 메커니즘입니다.
 
@@ -417,6 +461,8 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 
 <details>
 <summary>Cookie와 Session의 차이점을 설명해주세요</summary>
+
+<br>
 
 | 구분      | Cookie                    | Session                  |
 | --------- | ------------------------- | ------------------------ |
@@ -436,6 +482,8 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 <details>
 <summary>LocalStorage, SessionStorage, Cookie의 차이점</summary>
 
+<br>
+
 | 구분      | Cookie                         | LocalStorage               | SessionStorage             |
 | --------- | ------------------------------ | -------------------------- | -------------------------- |
 | 저장 위치 | 클라이언트 (전송 시 헤더 포함) | 클라이언트 (브라우저 내부) | 클라이언트 (브라우저 내부) |
@@ -451,6 +499,8 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 <details>
 <summary>프로세스와 스레드의 차이점을 설명해주세요</summary>
 
+<br>
+
 - **프로세스**(Process): 실행 중인 프로그램의 단위. **메모리(Code, Data, Heap, Stack)를 독립적으로 할당**받음.
 - **스레드**(Thread): 프로세스 내의 실행 흐름 단위. 프로세스의 **메모리(Code, Data, Heap)를 공유**하고, **Stack과 PC(Register)만 독립적**으로 가짐.
 
@@ -460,6 +510,8 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 
 <details>
 <summary>컨텍스트 스위칭(Context Switching)이란?</summary>
+
+<br>
 
 CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장하고, 다음 실행할 프로세스/스레드의 상태를 로드하여 교체하는 작업입니다.
 
@@ -472,6 +524,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>캐시의 지역성(Locality)이란?</summary>
 
+<br>
+
 프로그램이 데이터를 참조할 때 특정 패턴을 보이는 성질입니다. 이를 이용해 캐시 히트율(Hit Rate)을 높입니다.
 
 1. **시간 지역성 (Temporal Locality)**: 최근 사용한 데이터가 곧 다시 사용될 가능성이 높음 (예: 반복문의 변수).
@@ -482,6 +536,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>CPU 스케줄러의 종류와 특징은?</summary>
 
+<br>
+
 - **FCFS** (First-Come First-Served): 먼저 온 순서대로 처리 (비선점).
 - **Round Robin** (RR): 시간 할당량(Time Slice)만큼 쓰고 교체 (선점). 시분활 시스템의 기본.
 - **SJF** (Shortest Job First): 실행 시간이 가장 짧은 것 먼저 처리.
@@ -491,6 +547,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>동기화 문제: 뮤텍스와 세마포어의 차이는?</summary>
+
+<br>
 
 | 구분            | 뮤텍스 (Mutex)                     | 세마포어 (Semaphore)             |
 | --------------- | ---------------------------------- | -------------------------------- |
@@ -505,6 +563,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>데드락(Deadlock)이란?</summary>
+
+<br>
 
 두 개 이상의 프로세스가 서로 상대방의 자원을 점유한 채 무한정 기다리는 상태입니다.
 
@@ -523,6 +583,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>가상 메모리와 페이지 폴트(Page Fault) 과정</summary>
 
+<br>
+
 **가상 메모리**: 물리 메모리보다 큰 프로그램을 실행하기 위해 디스크 공간을 메모리처럼 사용하는 기술.
 **Page Fault**: 프로세스가 접근하려는 페이지가 물리 메모리에 없을 때 발생하는 인터럽트.
 
@@ -540,6 +602,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>인덱스(Index)의 개념과 자료구조(B+Tree)</summary>
 
+<br>
+
 인덱스는 검색 속도를 향상시키기 위한 자료구조입니다. 주로 **B+Tree**를 사용합니다.
 
 **B+Tree 특징**:
@@ -554,6 +618,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>클러스터드 인덱스 vs 논-클러스터드 인덱스</summary>
 
+<br>
+
 - **Clustered Index**: 물리적 데이터 정렬 순서와 인덱스 순서가 동일. 테이블당 1개 (주로 PK). 검색 빠름.
 - **Non-Clustered Index**: 물리적 정렬과 무관. 별도의 인덱스 페이지 존재. 테이블당 여러 개 가능.
 
@@ -561,6 +627,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>정규화(Normalization)란?</summary>
+
+<br>
 
 데이터 중복을 줄이고 무결성을 유지하기 위해 테이블을 분해하는 과정입니다.
 
@@ -573,6 +641,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>트랜잭션과 ACID 속성</summary>
+
+<br>
 
 트랜잭션은 데이터베이스의 논리적 작업 단위입니다.
 
@@ -587,6 +657,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>트랜잭션 격리 수준 (Isolation Level)</summary>
 
+<br>
+
 1. **Read Uncommitted**: 커밋 안 된 데이터 읽기 가능 (Dirty Read 발생).
 2. **Read Committed**: 커밋 된 데이터만 읽기. (대부분 DB 기본값)
 3. **Repeatable Read**: 트랜잭션 내에서 동일 조회 결과 보장 (MySQL 기본값).
@@ -597,6 +669,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>Join의 종류</summary>
 
+<br>
+
 - **INNER JOIN**: 교집합. 양쪽 다 있는 경우만.
 - **LEFT / RIGHT JOIN**: 기준 테이블 전체 + 매칭되는 반대쪽 (없으면 NULL).
 - **FULL OUTER JOIN**: 합집합.
@@ -606,6 +680,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>NoSQL vs RDBMS</summary>
 
+<br>
+
 - **RDBMS**: 정해진 스키마, 관계형 데이터, 데이터 무결성 중시 (금융, 결제). scale-up 위주.
 - **NoSQL**: 유연한 스키마, 대용량 분산 처리, 읽기/쓰기 성능 중시 (로그, 소셜 피드). scale-out 용이.
 
@@ -613,6 +689,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>낙관적 락(Optimistic Lock)과 비관적 락(Pessimistic Lock)</summary>
+
+<br>
 
 - **비관적 락** (Pessimistic Lock):
   - 트랜잭션 충돌이 발생할 것이라고 가정하고, 데이터를 읽을 때부터 락을 겁니다. (DB Lock 기능 이용 - `SELECT ... FOR UPDATE`)
@@ -626,6 +704,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>MVCC (Multi-Version Concurrency Control) 란?</summary>
 
+<br>
+
 **MySQL InnoDB**에서 락을 걸지 않고도 일관된 읽기를 제공하는 기술입니다.
 - **원리**: 데이터 업데이트 시, 이전 값을 **Undo Log**에 보관합니다. 다른 트랜잭션이 해당 데이터를 읽으려 하면 Undo Log에 있는 이전 버전을 보여줍니다.
 - **Snapshot Isolation**: 트랜잭션 시작 시점의 스냅샷을 보는 효과를 줍니다.
@@ -635,6 +715,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>Redis에 대해서 간단히 설명해주세요.</summary>
+
+<br>
 
 > 면접 답변
 > "Redis는 **인메모리 Key-Value 저장소**로, **싱글 스레드 + 이벤트 루프**로 동작해 원자적 연산을 보장합니다. **RDB/AOF**로 영속성을 지원하고, 캐시, 세션, 실시간 랭킹에 사용됩니다."
@@ -652,6 +734,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 <details>
 <summary>Redis와 Memcached의 차이</summary>
 
+<br>
+
 | 구분     | Redis                               | Memcached                   |
 | -------- | ----------------------------------- | --------------------------- |
 | 자료구조 | 다양한 자료구조 지원 (List, Set 등) | String만 지원               |
@@ -663,6 +747,8 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <details>
 <summary>ElasticSearch에 대해서 설명해주세요.</summary>
+
+<br>
 
 Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔진**입니다.
 
@@ -681,6 +767,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>MongoDB에 대해서 설명해주세요.</summary>
 
+<br>
+
 **Document 지향 NoSQL** 데이터베이스입니다.
 
 - **특징**:
@@ -693,6 +781,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>CAP 이론이란?</summary>
+
+<br>
 
 분산 시스템에서는 다음 3가지 중 **2가지만 만족할 수 있다**는 이론입니다.
 
@@ -709,6 +799,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Connection Pool (DBCP) 이란?</summary>
 
+<br>
+
 데이터베이스 연결(Connection)을 맺는 과정은 비용(시간, 리소스)이 많이 듭니다.
 이를 해결하기 위해 **미리 일정 수의 Connection을 만들어 Pool에 보관**해두고, 요청 시 빌려주고 사용 후 반납하는 방식입니다.
 - **HikariCP**: Spring Boot 2.0부터 기본 제공되는 고성능 Connection Pool 라이브러리.
@@ -717,6 +809,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>DB Replication vs Clustering</summary>
+
+<br>
 
 - **Replication** (복제):
   - **Master-Slave** 구조. Master는 쓰기(Insert/Update/Delete), Slave는 읽기(Select) 담당.
@@ -733,6 +827,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Java 컴파일 과정과 JVM</summary>
 
+<br>
+
 1. `.java` 소스코드 -> `javac` 컴파일 -> `.class` 바이트코드
 2. **JVM**(Class Loader)이 바이트코드 로드
 3. **Execution Engine** (Interpreter + **JIT Compiler**)이 기계어로 변환 실행
@@ -743,6 +839,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>GC (Garbage Collection) 란?</summary>
+
+<br>
 
 힙 메모리에서 더 이상 사용되지 않는 객체를 자동으로 정리하는 기능.
 
@@ -761,6 +859,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 <details>
 <summary>Java의 동시성 이슈와 해결 (Synchronized, Volatile)</summary>
 
+<br>
+
 - **Synchronized**: 락(Lock)을 걸어 한 번에 하나의 스레드만 접근 허용 (가시성 + 원자성 보장).
 - **Volatile**: CPU 캐시가 아닌 **메인 메모리에서 직접 읽기/쓰기** (가시성 보장, 원자성 보장 X). 상태 플래그 용도로 적합.
 - **Atomic Class**: CAS 알고리즘으로 락 없이 스레드 안전한 연산 제공.
@@ -769,6 +869,8 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>동시성 로직에 쓰이는 자료구조 (ConcurrentHashMap)</summary>
+
+<br>
 
 **HashMap**은 동기화되지 않음. **Hashtable**은 전체에 락을 걸어 느림.
 **ConcurrentHashMap**:
