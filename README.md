@@ -695,7 +695,7 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <br>
 
-트랜잭션은 데이터베이스의 논리적 작업 단위입니다.
+"트랜잭션은 **데이터베이스 상태를 변경하는 작업의 실행 단위**입니다. **ACID 특성**으로 안전성을 보장하며, **Undo Log로 롤백**, **Redo Log로 복구**합니다."
 
 **ACID**:
 - **A** (Atomicity, 원자성): "All or Nothing". 모두 성공하거나 모두 실패해야 함.
@@ -733,8 +733,52 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 <br>
 
-- **RDBMS**: 정해진 스키마, 관계형 데이터, 데이터 무결성 중시 (금융, 결제). scale-up 위주.
-- **NoSQL**: 유연한 스키마, 대용량 분산 처리, 읽기/쓰기 성능 중시 (로그, 소셜 피드). scale-out 용이.
+RDBMS는 ACID를 보장하고 테이블 간 관계를 정의하는 데이터베이스입니다. NoSQL은 SQL을 사용하지 않고 Key-Value, Document, Graph 등 다양한 형태의 데이터를 저장할 수 있는 데이터베이스입니다.
+
+**NoSQL 종류**
+
+| 유형              | 설명                           | 예시             |
+| :---------------- | :----------------------------- | :--------------- |
+| **Key-Value**     | 키로 값 조회, 가장 단순        | Redis, DynamoDB  |
+| **Document**      | JSON/BSON 문서 저장            | MongoDB, CouchDB |
+| **Column-Family** | 컬럼 단위로 저장, 대용량 분석  | Cassandra, HBase |
+| **Graph**         | 노드-엣지 관계 저장, 관계 탐색 | Neo4j            |
+
+> **Column-Family 저장 방식**
+>
+> **RDBMS (행 기반)**: 한 행의 모든 컬럼이 연속 저장
+> ```
+> Row1: [id=1, name="김철수", age=25, city="서울"]
+> Row2: [id=2, name="이영희", age=30, city="부산"]
+> ```
+>
+> **Column-Family (열 기반)**: 같은 컬럼끼리 연속 저장
+> ```
+> id:   [1, 2, 3...]
+> name: ["김철수", "이영희"...]
+> age:  [25, 30...]
+> ```
+>
+> **왜 분석에 유리한가?**
+> `SELECT AVG(age) FROM users` 실행 시:
+> - RDBMS: 모든 행을 읽어야 함 (불필요한 name, city도 읽음)
+> - Column-Family: age 컬럼만 읽음 -> 디스크 I/O 감소
+>
+> | DB | 용도 |
+> | :--- | :--- |
+> | **Cassandra** | 시계열 데이터, 로그, IoT |
+> | **HBase** | Hadoop 기반 대용량 분석 |
+
+> **BASE vs ACID**
+>
+> NoSQL은 ACID 대신 **BASE** 모델을 따름
+>
+> | 약어 | 의미 | 설명 |
+> | :--- | :--- | :--- |
+> | **BA** | Basically Available | 기본적으로 가용성 보장 |
+> | **S** | Soft state | 상태가 시간에 따라 변할 수 있음 |
+> | **E** | Eventual consistency | 결국에는 일관성 도달 |
+
 
 </details>
 
@@ -759,8 +803,10 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 **MySQL InnoDB**에서 락을 걸지 않고도 일관된 읽기를 제공하는 기술입니다.
 - **원리**: 데이터 업데이트 시, 이전 값을 **Undo Log**에 보관합니다. 다른 트랜잭션이 해당 데이터를 읽으려 하면 Undo Log에 있는 이전 버전을 보여줍니다.
-- **Snapshot Isolation**: 트랜잭션 시작 시점의 스냅샷을 보는 효과를 줍니다.
+- **Snapshot Isolation**: 트랜잭션 시작 시점이 아닌, **첫 SELECT 문이 실행되는 시점**에 스냅샷을 생성하여 일관성을 보장합니다.
 - 이를 통해 `READ_COMMITTED`나 `REPEATABLE_READ` 격리 수준에서 **Non-Blocking Read**를 가능하게 합니다.
+
+> **참고**: [MySQL MVCC 상세 동작 원리 (Consistent Read, Undo Log)](https://gotobill.github.io/mysql-part6/)
 
 </details>
 
@@ -779,6 +825,27 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
   - **RDB**: 특정 시점의 스냅샷 저장 (빠른 복구, 데이터 유실 가능성).
   - **AOF**: 모든 쓰기 명령 기록 (데이터 유실 적음, 파일 큼, 복구 느림).
 - **Cluster**: 데이터 샤딩 지원.
+
+> **RDB vs AOF 영속성**
+>
+> | 구분 | RDB (스냅샷) | AOF (로그) |
+> | :--- | :--- | :--- |
+> | 저장 방식 | 특정 시점 메모리 전체 덤프 | 모든 쓰기 명령 로그 기록 |
+> | 복구 속도 | 빠름 (파일 로드) | 느림 (명령어 재실행) |
+> | 데이터 유실 | 스냅샷 이후 유실 가능 | 거의 없음 |
+> | 파일 크기 | 작음 | 큼 |
+>
+> ```
+> # RDB: 메모리 상태 그대로 저장
+> [전체 데이터 바이너리]
+>
+> # AOF: 명령어 로그
+> SET user:1 "김철수"
+> SET user:2 "이영희"
+> INCR counter
+> ```
+>
+> **실무**: RDB + AOF 둘 다 사용 (RDB로 빠른 복구 + AOF로 유실 최소화)
 
 </details>
 
@@ -804,7 +871,7 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔진**입니다.
 
 **역인덱스(Inverted Index) 동작 원리**:
-일반적인 RDBMS가 "행 기반" 검색(`LIKE %검색어%`)을 한다면, ElasticSearch는 책 맨 뒤의 색인처럼 **단어 -> 문서 위치**를 저장합니다.
+일반적인 RDBMS가 "행 기반" 검색(`LIKE %검색어%`)을 한다면, ElasticSearch는 책 맨 뒤의 색인처럼 **"단어 -> 문서 위치"**를 저장합니다.
 
 | Token (Keyword) | Document IDs |
 | :-------------- | :----------- |
