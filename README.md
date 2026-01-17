@@ -6,11 +6,12 @@
 <br>
 
 **1. URL 파싱 및 DNS 조회**:
-2. DNS Lookup (순차적, hit 시 즉시 리턴):
+- DNS Lookup (순차적, hit 시 즉시 리턴):
    - 브라우저 캐시 확인 → 없음 → 다음
    - OS hosts 파일 (/etc/hosts) 확인 → 없음 → 다음
    - OS DNS 캐시 확인 → 없음 → 다음
    - DNS 서버 질의 → IP 반환 → **여기서 멈춤**
+ 
 **2. TCP 연결 수립** (3-Way Handshake):
 ```
 클라이언트 --[SYN]--------> 서버
