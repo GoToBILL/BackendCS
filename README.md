@@ -47,6 +47,9 @@ Accept: text/html
 <details>
 <summary>OSI 7계층과 그 존재 이유, TCP/IP 4계층에 대해 설명해주세요</summary>
 
+<img width="1260" height="1249" alt="image" src="https://github.com/user-attachments/assets/8e209b0a-73c7-455d-b643-3791f4f27a44" />
+
+
 **OSI 7계층이 존재하는 이유**:
 - 네트워크 통신 과정을 단계별로 파악 가능
 - 특정 계층에 문제가 생기면 해당 계층만 수정 가능
@@ -167,6 +170,9 @@ write/read...
 2. **Connected Socket**: 1000개
    - **버퍼 존재**: 각 소켓마다 독립적인 **Send Buffer + Revc Buffer** (1쌍)이 할당됩니다.
    - **메모리**: 따라서 연결이 많아지면 소켓 파일 자체보다, 이 **TCP 버퍼들이 차지하는 메모리**가 서버 리소스의 주범이 됩니다.
+  
+<img width="1260" height="1194" alt="image" src="https://github.com/user-attachments/assets/7eedf3c0-3283-4185-ba34-a9c4ef1f715c" />
+
 
 </details>
 
@@ -325,8 +331,10 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 </details>
 
-<details>
+<details>   
 <summary>HTTPS의 SSL Handshake 과정을 설명해주세요</summary>
+
+<img width="1200" height="1272" alt="image" src="https://github.com/user-attachments/assets/24869ccc-a42c-4563-8e47-b1650e767ccf" />
 
 1. **Client Hello**: 지원 암호화 방식, 랜덤값 전송
 2. **Server Hello**: 선택한 암호화 방식, 랜덤값, **인증서**(공개키 포함) 전송
@@ -350,6 +358,9 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 <details>
 <summary>HTTP 버전별 차이를 설명해주세요</summary>
+
+<img width="783" height="461" alt="image" src="https://github.com/user-attachments/assets/aeb07f7b-4991-4709-8c8e-6ab9a754bc15" />
+
 
 - **HTTP/1.0**: 매 요청마다 연결 수립/종료 (비효율)
 - **HTTP/1.1**: **Keep-Alive** (연결 재사용), **Pipelining** (순차적 요청, Head-of-Line Blocking 문제 존재)
