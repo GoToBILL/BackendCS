@@ -803,7 +803,19 @@ CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장�
 
 Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔진**입니다.
 
-- **역인덱스**: 키워드를 통해 문서를 찾는 방식 (책의 맨 뒤 '색인'과 유사). RDBMS의 `LIKE` 검색보다 훨씬 빠릅니다.
+**역인덱스(Inverted Index) 동작 원리**:
+일반적인 RDBMS가 "행 기반" 검색(`LIKE %검색어%`)을 한다면, ElasticSearch는 책 맨 뒤의 색인처럼 **"단어 -> 문서 위치"**를 저장합니다.
+
+| Token (Keyword) | Document IDs |
+| :-------------- | :----------- |
+| "개발"          | [Doc1, Doc3] |
+| "면접"          | [Doc1, Doc2] |
+| "취업"          | [Doc2]       |
+
+1. **Tokenizing**: 문장을 단어(Token) 단위로 쪼갭니다. ("개발 면접 준비" -> `["개발", "면접", "준비"]`)
+2. **Indexing**: 쪼갠 단어를 Key로, 문서 ID를 Value로 저장합니다.
+3. **Searching**: "개발"을 검색하면 전체 문서를 훑지 않고, 바로 `[Doc1, Doc3]`를 찾아냅니다. (매우 빠름)
+
 - **특징**:
   - **형태소 분석**: '먹었다', '먹으니' -> '먹다' 검색 가능.
   - **분산 저장**: 데이터를 샤드(Shard) 단위로 쪼개어 여러 노드에 저장 (Scale-out 용이).
@@ -863,8 +875,6 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
-<br>
-
 - **Replication** (복제):
   - **Master-Slave** 구조. Master는 쓰기(Insert/Update/Delete), Slave는 읽기(Select) 담당.
   - 데이터 백업 및 읽기 분산 처리로 성능 향상. 동기화 지연 발생 가능.
@@ -882,8 +892,6 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
-<br>
-
 1. `.java` 소스코드 -> `javac` 컴파일 -> `.class` 바이트코드
 2. **JVM**(Class Loader)이 바이트코드 로드
 3. **Execution Engine** (Interpreter + **JIT Compiler**)이 기계어로 변환 실행
@@ -894,8 +902,6 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>GC (Garbage Collection) 란?</summary>
-
-<br>
 
 <br>
 
@@ -918,8 +924,6 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
-<br>
-
 - **Synchronized**: 락(Lock)을 걸어 한 번에 하나의 스레드만 접근 허용 (가시성 + 원자성 보장).
 - **Volatile**: CPU 캐시가 아닌 **메인 메모리에서 직접 읽기/쓰기** (가시성 보장, 원자성 보장 X). 상태 플래그 용도로 적합.
 - **Atomic Class**: CAS 알고리즘으로 락 없이 스레드 안전한 연산 제공.
@@ -928,8 +932,6 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <details>
 <summary>동시성 로직에 쓰이는 자료구조 (ConcurrentHashMap)</summary>
-
-<br>
 
 <br>
 
@@ -1403,11 +1405,11 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <br>
 
-| 포맷 | 압축 방식 | 투명도 | 용도 |
-| ---- | --------- | ------ | ---- |
-| **JPEG** | 손실 압축 | X | 사진, 복잡한 이미지 |
-| **PNG** | 무손실 압축 | O | 로고, 아이콘, 스크린샷 |
-| **WebP** | 손실/무손실 | O | 웹 최적화 (JPEG/PNG 대체) |
+| 포맷     | 압축 방식   | 투명도 | 용도                      |
+| -------- | ----------- | ------ | ------------------------- |
+| **JPEG** | 손실 압축   | X      | 사진, 복잡한 이미지       |
+| **PNG**  | 무손실 압축 | O      | 로고, 아이콘, 스크린샷    |
+| **WebP** | 손실/무손실 | O      | 웹 최적화 (JPEG/PNG 대체) |
 
 **JPEG**:
 - **손실 압축**으로 파일 크기 작음
@@ -1448,12 +1450,12 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 
 <br>
 
-| 구분 | JSON | XML |
-| ---- | ---- | --- |
-| 문법 | 간결함 (`{}`, `[]`) | 태그 기반 (`<tag>`) |
-| 용량 | 작음 | 큼 |
-| 파싱 속도 | 빠름 | 느림 |
-| 주 사용처 | REST API | SOAP, 레거시 시스템 |
+| 구분      | JSON                | XML                 |
+| --------- | ------------------- | ------------------- |
+| 문법      | 간결함 (`{}`, `[]`) | 태그 기반 (`<tag>`) |
+| 용량      | 작음                | 큼                  |
+| 파싱 속도 | 빠름                | 느림                |
+| 주 사용처 | REST API            | SOAP, 레거시 시스템 |
 
 **현재 트렌드**: REST API에서는 **JSON**이 표준.
 
