@@ -1,8 +1,7 @@
 ## 1. Network (네트워크)
 
----
-
-### 웹 통신의 큰 흐름: https://www.google.com/ 을 접속할 때 일어나는 일
+<details>
+<summary>웹 통신의 큰 흐름: https://www.google.com/ 을 접속할 때 일어나는 일</summary>
 
 **1. URL 파싱 및 DNS 조회**:
 - 브라우저가 URL을 파싱하여 프로토콜(HTTPS), 도메인(www.google.com), 경로(/) 분리
@@ -43,9 +42,10 @@ Accept: text/html
 
 **7. TCP 연결 종료** (4-Way Handshake)
 
----
+</details>
 
-### OSI 7계층과 그 존재 이유, TCP/IP 4계층에 대해 설명해주세요
+<details>
+<summary>OSI 7계층과 그 존재 이유, TCP/IP 4계층에 대해 설명해주세요</summary>
 
 **OSI 7계층이 존재하는 이유**:
 - 네트워크 통신 과정을 단계별로 파악 가능
@@ -73,9 +73,10 @@ Accept: text/html
 | Internet       | 3        | IP 라우팅             |
 | Network Access | 1, 2     | 물리적 네트워크 접근  |
 
----
+</details>
 
-### 소켓이 열리고 나서 서버-클라이언트가 요청되는 과정을 OSI 계층과 연관지어 설명해주세요
+<details>
+<summary>소켓이 열리고 나서 서버-클라이언트가 요청되는 과정을 OSI 계층과 연관지어 설명해주세요</summary>
 
 **송신 측** (데이터 전송):
 
@@ -107,9 +108,10 @@ IP 헤더 추가 (출발지/목적지 IP 주소, TTL)
 **수신 측** (데이터 수신):
 역순으로 각 계층의 헤더를 제거하며 상위 계층으로 전달합니다.
 
----
+</details>
 
-### 소켓을 통해 서버-클라이언트가 연결되기 위한 시스템콜을 설명해주세요
+<details>
+<summary>소켓을 통해 서버-클라이언트가 연결되기 위한 시스템콜을 설명해주세요</summary>
 
 **서버 측**:
 ```c
@@ -135,9 +137,10 @@ connect(sock_fd, ...); // 이때 OS가 클라이언트에게 남는 포트(Rando
 write/read...
 ```
 
----
+</details>
 
-### 서버에서 accept() 시 소켓을 새로 만드는데, 그럼 서버 소켓은 2개인가요?
+<details>
+<summary>서버에서 accept() 시 소켓을 새로 만드는데, 그럼 서버 소켓은 2개인가요?</summary>
 
 네, 역할이 다른 **두 종류의 소켓**이 존재합니다.
 
@@ -150,9 +153,10 @@ write/read...
    - **역할**: 연결된 **특정 클라이언트와 실제 데이터(read/write)를 주고받는 역할**입니다.
    - **1:N 구조**: 리스닝 소켓은 1개지만, 연결된 소켓은 클라이언트 수만큼(N개) 생성됩니다.
 
----
+</details>
 
-### 클라이언트가 1000명 연결되면 TCP 버퍼도 1000개 생기나요?
+<details>
+<summary>클라이언트가 1000명 연결되면 TCP 버퍼도 1000개 생기나요?</summary>
 
 네, 맞습니다. **연결(Connected Socket)당 버퍼 1쌍**이 생성됩니다.
 
@@ -164,9 +168,10 @@ write/read...
    - **버퍼 존재**: 각 소켓마다 독립적인 **Send Buffer + Revc Buffer** (1쌍)이 할당됩니다.
    - **메모리**: 따라서 연결이 많아지면 소켓 파일 자체보다, 이 **TCP 버퍼들이 차지하는 메모리**가 서버 리소스의 주범이 됩니다.
 
----
+</details>
 
-### 포트는 0~65535번 구멍밖에 없는데, 7만 명이 동시 접속하면 어떻게 되나요?
+<details>
+<summary>포트는 0~65535번 구멍밖에 없는데, 7만 명이 동시 접속하면 어떻게 되나요?</summary>
 
 **결론부터 말하면: 접속 가능합니다.** (서버의 포트가 부족해서 못 받는 일은 없습니다.)
 
@@ -184,9 +189,10 @@ TCP 연결은 아래 5가지 정보(5-Tuple)로 식별됩니다.
 
 즉, **서버의 포트는 80번 하나만 사용**하면서도, 클라이언트의 IP와 포트 조합이 다르기 때문에 서로 다른 연결로 구분할 수 있습니다.
 
----
+</details>
 
-### 그럼 accept()로 만든 새로운 소켓은 포트를 새로 할당받나요? (포트 소모)
+<details>
+<summary>그럼 accept()로 만든 새로운 소켓은 포트를 새로 할당받나요? (포트 소모)</summary>
 
 **아니요! 포트를 새로 할당받지 않습니다.**
 이 부분이 가장 많이 오해하는 부분입니다.
@@ -196,9 +202,10 @@ TCP 연결은 아래 5가지 정보(5-Tuple)로 식별됩니다.
 3. **구분 방법**: "어? 그럼 80번 포트 하나에 소켓이 수만 개인데 안 섞이나요?" 
    -> 네, 아까 말씀드린 **5-Tuple**(특히 클라이언트의 IP와 포트)을 보고 커널이 정확히 배달해 줍니다.
 
----
+</details>
 
-### 소켓을 생성하는데 포트를 안 쓴다는 게 무슨 말인가요? 소켓은 포트가 있어야 하잖아요?
+<details>
+<summary>소켓을 생성하는데 포트를 안 쓴다는 게 무슨 말인가요? 소켓은 포트가 있어야 하잖아요?</summary>
 
 여기서 중요한 개념은 **소켓은 포트 그 자체가 아니라, '파일(객체)'이다** 라는 점입니다.
 
@@ -217,9 +224,10 @@ TCP 연결은 아래 5가지 정보(5-Tuple)로 식별됩니다.
 보시다시피 **내 포트: 80**은 모두 같지만, **파일 번호(FD)가 다르고 상대방 정보가 다르기 때문에** 엄연히 다른 소켓(파일)들이 생성된 것입니다.
 따라서 포트 번호 고갈 걱정 없이 소켓(파일)만 계속 만들어낼 수 있는 것입니다.
 
----
+</details>
 
-### 웹 서버 소프트웨어(Apache, Nginx)는 OSI 7계층 중 어디서 작동하나요?
+<details>
+<summary>웹 서버 소프트웨어(Apache, Nginx)는 OSI 7계층 중 어디서 작동하나요?</summary>
 
 Apache와 Nginx는 **7계층** (Application Layer)에서 동작합니다.
 
@@ -231,9 +239,10 @@ Apache와 Nginx는 **7계층** (Application Layer)에서 동작합니다.
 - **L4 로드밸런싱** (Transport): IP+Port 기반 라우팅. 빠름.
 - **L7 로드밸런싱** (Application): URL, 헤더, 쿠키 기반 라우팅. 정교한 분산 가능.
 
----
+</details>
 
-### TCP와 UDP의 차이점에 대해서 설명해주세요
+<details>
+<summary>TCP와 UDP의 차이점에 대해서 설명해주세요</summary>
 
 | 구분           | TCP                            | UDP                       |
 | -------------- | ------------------------------ | ------------------------- |
@@ -244,27 +253,30 @@ Apache와 Nginx는 **7계층** (Application Layer)에서 동작합니다.
 | 흐름/혼잡 제어 | 있음                           | 없음                      |
 | 사용 예        | 웹(HTTP), 이메일, 파일 전송    | 스트리밍, 게임, DNS, VoIP |
 
----
+</details>
 
-### UDP는 그럼 신뢰성이 없나요?
+<details>
+<summary>UDP는 그럼 신뢰성이 없나요?</summary>
 
 UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨에서 신뢰성을 구현**할 수 있습니다.
 
 **UDP를 사용하면서 신뢰성을 확보하는 방법**:
 - **QUIC 프로토콜**: HTTP/3의 기반. UDP 위에서 신뢰성, 멀티플렉싱, 암호화 제공
 
----
+</details>
 
-### TCP에서 신뢰성을 제어하기 위해 어떤 것을 하나요?
+<details>
+<summary>TCP에서 신뢰성을 제어하기 위해 어떤 것을 하나요?</summary>
 
 1. **3-Way Handshake**: 연결 수립 시 양방향 통신 가능 여부 확인
 2. **흐름 제어** (Flow Control): Sliding Window로 수신자 버퍼 상태에 맞춰 전송량 조절
 3. **혼잡 제어** (Congestion Control): Slow Start, Congestion Avoidance로 네트워크 혼잡 방지
 4. **오류 제어**: Checksum, Sequence Number, ACK, Timeout & Retransmission
 
----
+</details>
 
-### TCP의 흐름 제어(Flow Control)와 혼잡 제어(Congestion Control) 기법들
+<details>
+<summary>TCP의 흐름 제어(Flow Control)와 혼잡 제어(Congestion Control) 기법들</summary>
 
 **1. 흐름 제어 (Flow Control)**: 송신 측과 **수신 측**의 속도 차이 해결
 - **Stop and Wait**: 매번 응답(ACK)을 받고나서 다음 패킷 전송. (비효율)
@@ -279,9 +291,10 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
   - **TCP Reno**: 패킷 유실(3 Duplicate ACKs) 시 윈도우 크기를 **절반으로 줄임**. (Fast Recovery)
   - **TCP CUBIC**: (현재 리눅스 기본값) 3차 함수 곡선을 이용해 윈도우 크기를 유연하게 조절.
 
----
+</details>
 
-### TCP 3-Way Handshake, 4-Way Handshake에 대해서 설명해주세요
+<details>
+<summary>TCP 3-Way Handshake, 4-Way Handshake에 대해서 설명해주세요</summary>
 
 **3-Way Handshake** (연결 수립):
 1. Client -> Server: **SYN** (접속 요청)
@@ -295,9 +308,10 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 4. Client -> Server: **ACK** (알겠어) -> Server 연결 종료
 5. Client: **TIME_WAIT** 후 종료 (지연 패킷 처리 보장)
 
----
+</details>
 
-### HTTP와 HTTPS의 차이점에 대해서 설명해주세요
+<details>
+<summary>HTTP와 HTTPS의 차이점에 대해서 설명해주세요</summary>
 
 | 구분 | HTTP             | HTTPS                 |
 | ---- | ---------------- | --------------------- |
@@ -309,9 +323,10 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 - **무결성**: 데이터 변조 탐지
 - **인증**: CA 인증서로 서버 신원 확인
 
----
+</details>
 
-### HTTPS의 SSL Handshake 과정을 설명해주세요
+<details>
+<summary>HTTPS의 SSL Handshake 과정을 설명해주세요</summary>
 
 1. **Client Hello**: 지원 암호화 방식, 랜덤값 전송
 2. **Server Hello**: 선택한 암호화 방식, 랜덤값, **인증서**(공개키 포함) 전송
@@ -320,9 +335,10 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 5. **Session Key 생성**: 양측이 서버측 랜덤값 + 클라이언트측 랜덤값 + Pre-Master Secret으로 동일한 **대칭키**(Session Key) 생성
 6. **통신 시작**: 이후 데이터는 **대칭키**로 암호화하여 통신
 
----
+</details>
 
-### 왜 처음엔 비대칭키를 쓰고 나중엔 대칭키로 이루어지나요?
+<details>
+<summary>왜 처음엔 비대칭키를 쓰고 나중엔 대칭키로 이루어지나요?</summary>
 
 **Hybrid 방식의 이유**:
 1. **비대칭키(공개키)**: 키 교환에 안전하지만, **복잡한 수학적 연산(소인수분해, 타원곡선 등)이 필요해 CPU 부하가 크고 매우 느림**.
@@ -330,27 +346,30 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 
 -> 따라서, **처음에만 비대칭키로 대칭키를 안전하게 공유**하고, 이후 **대용량 데이터는 빠른 대칭키로 통신**합니다.
 
----
+</details>
 
-### HTTP 버전별 차이를 설명해주세요
+<details>
+<summary>HTTP 버전별 차이를 설명해주세요</summary>
 
 - **HTTP/1.0**: 매 요청마다 연결 수립/종료 (비효율)
 - **HTTP/1.1**: **Keep-Alive** (연결 재사용), **Pipelining** (순차적 요청, Head-of-Line Blocking 문제 존재)
 - **HTTP/2**: **Multiplexing** (한 연결로 동시 다발적 요청 처리), **Header Compression**, **Server Push**
 - **HTTP/3**: **QUIC** (UDP 기반), TCP의 Head-of-Line Blocking 완전 해결, 초기 연결 속도 비약적 향상
 
----
+</details>
 
-### HTTP 상태 코드(Status Code)에 대해 설명해주세요
+<details>
+<summary>HTTP 상태 코드(Status Code)에 대해 설명해주세요</summary>
 
 - **2xx** (Success): 요청 성공 (200 OK, 201 Created)
 - **3xx** (Redirection): 페이지 이동 필요 (301 Moved Permanently, 302 Found)
 - **4xx** (Client Error): 클라이언트 잘못 (400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found)
 - **5xx** (Server Error): 서버 잘못 (500 Internal Server Error, 502 Bad Gateway)
 
----
+</details>
 
-### GET과 POST의 차이점에 대해서 설명해주세요
+<details>
+<summary>GET과 POST의 차이점에 대해서 설명해주세요</summary>
 
 | 구분        | GET                   | POST                 |
 | ----------- | --------------------- | -------------------- |
@@ -359,9 +378,10 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 | 멱등성      | O (여러 번 해도 같음) | X (할 때마다 생성됨) |
 | 캐싱        | 가능                  | 불가능               |
 
----
+</details>
 
-### RESTful이란 무엇이며 특징을 설명해주세요
+<details>
+<summary>RESTful이란 무엇이며 특징을 설명해주세요</summary>
 
 **REST** (Representational State Transfer):
 HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행위를 정하는 아키텍처 스타일입니다.
@@ -371,9 +391,10 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 2. **Method는 행위를 표현** -> 조회(GET), 생성(POST), 수정(PUT/PATCH), 삭제(DELETE)
 3. **Stateless**: 서버는 클라이언트 상태를 저장하지 않음 (JWT, LocalStorage)
 
----
+</details>
 
-### CORS란 무엇이며 설명해주세요
+<details>
+<summary>CORS란 무엇이며 설명해주세요</summary>
 
 **CORS** (Cross-Origin Resource Sharing):
 보안상 브라우저는 다른 출처(도메인, 포트 등)의 리소스 요청을 차단합니다(SOP). 이를 허용해주기 위해 서버가 응답 헤더에 "이 출처는 허용한다"라고 알려주는 메커니즘입니다.
@@ -381,16 +402,17 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 - **Preflight Request**: 실제 요청 전 `OPTIONS` 메서드로 서버의 허용 여부를 먼저 확인함.
 - **해결**: 서버에서 `Access-Control-Allow-Origin` 헤더 설정.
 
----
+</details>
 
-### Cookie와 Session의 차이점을 설명해주세요
+<details>
+<summary>Cookie와 Session의 차이점을 설명해주세요</summary>
 
-| 구분    | Cookie           | Session             |
-| ----- | ---------------- | ------------------- |
+| 구분      | Cookie                    | Session                  |
+| --------- | ------------------------- | ------------------------ |
 | 저장 위치 | **클라이언트** (브라우저) | **서버** (메모리/DB)     |
-| 보안    | 취약 (탈취/변조 용이)    | 안전 (Session ID만 노출) |
-| 용량    | 작음 (4KB)         | 서버 허용 범위 내          |
-| 만료    | 설정 가능            | 브라우저 종료 시 삭제        |
+| 보안      | 취약 (탈취/변조 용이)     | 안전 (Session ID만 노출) |
+| 용량      | 작음 (4KB)                | 서버 허용 범위 내        |
+| 만료      | 설정 가능                 | 브라우저 종료 시 삭제    |
 
 **동작 원리**:
 1. 로그인 성공 시 서버가 Session ID 생성 및 저장
@@ -398,14 +420,587 @@ HTTP URI로 자원을 명시하고, HTTP Method(GET, POST, PUT, DELETE)로 행�
 3. 이후 클라이언트는 요청마다 Cookie에 Session ID를 담아 보냄
 4. 서버는 Session ID로 사용자 식별
 
----
+</details>
 
-### LocalStorage, SessionStorage, Cookie의 차이점
+<details>
+<summary>LocalStorage, SessionStorage, Cookie의 차이점</summary>
 
-| 구분    | Cookie              | LocalStorage    | SessionStorage  |
-| ----- | ------------------- | --------------- | --------------- |
-| 저장 위치 | 클라이언트 (전송 시 헤더 포함)  | 클라이언트 (브라우저 내부) | 클라이언트 (브라우저 내부) |
-| 용량    | 4KB                 | 5MB 이상          | 5MB 이상          |
-| 서버 전송 | 매 요청마다 전송됨          | 전송되지 않음         | 전송되지 않음         |
-| 수명    | 만료 기한 설정 가능         | 영구 저장 (지울 때까지)  | 탭/브라우저 종료 시 삭제  |
-| 용도    | 인증 토큰(JWT), 오늘 그만보기 | 자동 로그인 저장, 장바구니 | 일회성 폼 데이터       |
+| 구분      | Cookie                         | LocalStorage               | SessionStorage             |
+| --------- | ------------------------------ | -------------------------- | -------------------------- |
+| 저장 위치 | 클라이언트 (전송 시 헤더 포함) | 클라이언트 (브라우저 내부) | 클라이언트 (브라우저 내부) |
+| 용량      | 4KB                            | 5MB 이상                   | 5MB 이상                   |
+| 서버 전송 | 매 요청마다 전송됨             | 전송되지 않음              | 전송되지 않음              |
+| 수명      | 만료 기한 설정 가능            | 영구 저장 (지울 때까지)    | 탭/브라우저 종료 시 삭제   |
+| 용도      | 인증 토큰(JWT), 오늘 그만보기  | 자동 로그인 저장, 장바구니 | 일회성 폼 데이터           |
+
+</details>
+
+## 2. Operating System (운영체제)
+
+<details>
+<summary>프로세스와 스레드의 차이점을 설명해주세요</summary>
+
+- **프로세스**(Process): 실행 중인 프로그램의 단위. **메모리(Code, Data, Heap, Stack)를 독립적으로 할당**받음.
+- **스레드**(Thread): 프로세스 내의 실행 흐름 단위. 프로세스의 **메모리(Code, Data, Heap)를 공유**하고, **Stack과 PC(Register)만 독립적**으로 가짐.
+
+**요약**: 프로세스는 자원 할당의 단위, 스레드는 실행의 단위.
+
+</details>
+
+<details>
+<summary>컨텍스트 스위칭(Context Switching)이란?</summary>
+
+CPU가 현재 실행 중인 프로세스/스레드의 상태(Context)를 저장하고, 다음 실행할 프로세스/스레드의 상태를 로드하여 교체하는 작업입니다.
+
+- **오버헤드**: 빈번한 컨텍스트 스위칭은 캐시 초기화 비용 등으로 성능 저하를 일으킴.
+- **스레드가 가벼운 이유**: 스레드는 공유 메모리를 사용하므로 컨텍스트 스위칭 시 메모리 영역 교체 비용이 적습니다.
+
+</details>
+
+<details>
+<summary>CPU 스케줄러의 종류와 특징은?</summary>
+
+- **FCFS** (First-Come First-Served): 먼저 온 순서대로 처리 (비선점).
+- **Round Robin** (RR): 시간 할당량(Time Slice)만큼 쓰고 교체 (선점). 시분활 시스템의 기본.
+- **SJF** (Shortest Job First): 실행 시간이 가장 짧은 것 먼저 처리.
+- **Priority Scheduling**: 우선순위 높은 것 먼저. (Aging 기법으로 기아 현상 방지)
+
+</details>
+
+<details>
+<summary>동기화 문제: 뮤텍스와 세마포어의 차이는?</summary>
+
+- **Mutex** (Mutual Exclusion):
+  - **1개의 자원**에 대한 접근 제어 (Locking 메커니즘).
+  - 락을 건 스레드만이 락을 해제할 수 있음 (소유권 O).
+- **Semaphore**:
+  - **N개의 자원**에 대한 접근 제어 (Signaling 메커니즘).
+  - 카운터를 사용하여 여러 스레드 접근 제어 가능. 소유권 개념 없음.
+
+</details>
+
+<details>
+<summary>데드락(Deadlock)이란?</summary>
+
+두 개 이상의 프로세스가 서로 상대방의 자원을 점유한 채 무한정 기다리는 상태입니다.
+
+**발생 4대 조건**:
+1. **상호 배제** (Mutual Exclusion)
+2. **점유와 대기** (Hold and Wait)
+3. **비선점** (No Preemption)
+4. **순환 대기** (Circular Wait)
+
+**해결**: 위 조건 중 하나를 깨뜨리거나, 회피 알고리즘(은행원 알고리즘) 등 사용.
+
+</details>
+
+<details>
+<summary>가상 메모리와 페이지 폴트(Page Fault) 과정</summary>
+
+**가상 메모리**: 물리 메모리보다 큰 프로그램을 실행하기 위해 디스크 공간을 메모리처럼 사용하는 기술.
+**Page Fault**: 프로세스가 접근하려는 페이지가 물리 메모리에 없을 때 발생하는 인터럽트.
+
+**처리 과정**:
+1. CPU가 가상 주소 접근 -> MMU 확인 -> Valid bit 0 (없음)
+2. **Page Fault** 발생 -> OS로 트랩 전송
+3. OS가 디스크(Swap Area)에서 해당 페이지 탐색
+4. 물리 메모리의 빈 프레임에 로드 (없다면 페이지 교체 알고리즘 동작)
+5. 페이지 테이블 업데이트 후 프로세스 재개
+
+</details>
+
+## 3. Database (데이터베이스)
+
+<details>
+<summary>인덱스(Index)의 개념과 자료구조(B+Tree)</summary>
+
+인덱스는 검색 속도를 향상시키기 위한 자료구조입니다. 주로 **B+Tree**를 사용합니다.
+
+**B+Tree 특징**:
+- 모든 데이터가 **리프 노드**에만 있음 (범위 검색 유리).
+- 리프 노드끼리 Linked List로 연결되어 순차 탐색 빠름.
+- **Balanced Tree**로 조회 성능이 O(log N) 보장.
+
+**왜 중간 노드엔 키만 저장하나요?**: 하나의 디스크 블록에 더 많은 키를 담아 트리의 높이를 낮추기 위함입니다 (Disk I/O 감소).
+
+</details>
+
+<details>
+<summary>클러스터드 인덱스 vs 논-클러스터드 인덱스</summary>
+
+- **Clustered Index**: 물리적 데이터 정렬 순서와 인덱스 순서가 동일. 테이블당 1개 (주로 PK). 검색 빠름.
+- **Non-Clustered Index**: 물리적 정렬과 무관. 별도의 인덱스 페이지 존재. 테이블당 여러 개 가능.
+
+</details>
+
+<details>
+<summary>정규화(Normalization)란?</summary>
+
+데이터 중복을 줄이고 무결성을 유지하기 위해 테이블을 분해하는 과정입니다.
+
+- **1차**(1NF): 원자값만 저장 (Atomic).
+- **2차**(2NF): 부분 함수 종속 제거 (PK의 일부에만 종속된 컬럼 분리).
+- **3차**(3NF): 이행 함수 종속 제거 (A->B, B->C 일 때 A->C 제거).
+- **역정규화**(De-normalization): 성능(조인 비용 감소)을 위해 의도적으로 중복 허용.
+
+</details>
+
+<details>
+<summary>트랜잭션과 ACID 속성</summary>
+
+트랜잭션은 데이터베이스의 논리적 작업 단위입니다.
+
+**ACID**:
+- **A** (Atomicity, 원자성): "All or Nothing". 모두 성공하거나 모두 실패해야 함.
+- **C** (Consistency, 일관성): 트랜잭션 전후 데이터 제약조건 만족.
+- **I** (Isolation, 격리성): 다른 트랜잭션의 끼어들기 방지.
+- **D** (Durability, 지속성): 커밋 후엔 영구 저장.
+
+</details>
+
+<details>
+<summary>트랜잭션 격리 수준 (Isolation Level)</summary>
+
+1. **Read Uncommitted**: 커밋 안 된 데이터 읽기 가능 (Dirty Read 발생).
+2. **Read Committed**: 커밋 된 데이터만 읽기. (대부분 DB 기본값)
+3. **Repeatable Read**: 트랜잭션 내에서 동일 조회 결과 보장 (MySQL 기본값).
+4. **Serializable**: 완벽한 직렬화. 동시성 최악.
+
+</details>
+
+<details>
+<summary>Join의 종류</summary>
+
+- **INNER JOIN**: 교집합. 양쪽 다 있는 경우만.
+- **LEFT / RIGHT JOIN**: 기준 테이블 전체 + 매칭되는 반대쪽 (없으면 NULL).
+- **FULL OUTER JOIN**: 합집합.
+
+</details>
+
+<details>
+<summary>NoSQL vs RDBMS</summary>
+
+- **RDBMS**: 정해진 스키마, 관계형 데이터, 데이터 무결성 중시 (금융, 결제). scale-up 위주.
+- **NoSQL**: 유연한 스키마, 대용량 분산 처리, 읽기/쓰기 성능 중시 (로그, 소셜 피드). scale-out 용이.
+
+</details>
+
+<details>
+<summary>낙관적 락(Optimistic Lock)과 비관적 락(Pessimistic Lock)</summary>
+
+- **비관적 락** (Pessimistic Lock):
+  - 트랜잭션 충돌이 발생할 것이라고 가정하고, 데이터를 읽을 때부터 락을 겁니다. (DB Lock 기능 이용 - `SELECT ... FOR UPDATE`)
+  - 데이터 무결성 보장 수준이 높지만, 동시성 저하 우려.
+- **낙관적 락** (Optimistic Lock):
+  - 트랜잭션 충돌이 잘 발생하지 않을 것이라고 가정. 락을 걸지 않고, 커밋 시점에 버전(Version) 정보로 충돌 여부 확인.
+  - JPA에서 `@Version` 어노테이션 사용. 충돌 시 애플리케이션 레벨에서 예외 처리 필요.
+
+</details>
+
+<details>
+<summary>Connection Pool (DBCP) 이란?</summary>
+
+데이터베이스 연결(Connection)을 맺는 과정은 비용(시간, 리소스)이 많이 듭니다.
+이를 해결하기 위해 **미리 일정 수의 Connection을 만들어 Pool에 보관**해두고, 요청 시 빌려주고 사용 후 반납하는 방식입니다.
+- **HikariCP**: Spring Boot 2.0부터 기본 제공되는 고성능 Connection Pool 라이브러리.
+
+</details>
+
+<details>
+<summary>DB Replication vs Clustering</summary>
+
+- **Replication** (복제):
+  - **Master-Slave** 구조. Master는 쓰기(Insert/Update/Delete), Slave는 읽기(Select) 담당.
+  - 데이터 백업 및 읽기 분산 처리로 성능 향상. 동기화 지연 발생 가능.
+- **Clustering** (클러스터링):
+  - 여러 DB 서버를 하나의 시스템처럼 동작하게 함.
+  - **Active-Active**: 모든 서버가 읽기/쓰기 가능 (부하 분산).
+  - **Active-Standby**: 장애 시 대기 서버가 역할 수행 (고가용성 HA).
+
+</details>
+
+## 4. Java
+
+<details>
+<summary>Java 컴파일 과정과 JVM</summary>
+
+1. `.java` 소스코드 -> `javac` 컴파일 -> `.class` 바이트코드
+2. **JVM**(Class Loader)이 바이트코드 로드
+3. **Execution Engine** (Interpreter + **JIT Compiler**)이 기계어로 변환 실행
+
+**JIT Compiler**: 반복되는 코드를 네이티브 코드로 미리 컴파일해두어 인터프리터의 느린 속도 개선.
+
+</details>
+
+<details>
+<summary>GC (Garbage Collection) 란?</summary>
+
+힙 메모리에서 더 이상 사용되지 않는 객체를 자동으로 정리하는 기능.
+
+**동작 원리** (Generational GC):
+- **Eden**: 새 객체 생성. 꽉 차면 **Minor GC**.
+- **Survivor**: 살아남은 객체 이동.
+- **Old**: 오래 살아남은 객체 이동. 꽉 차면 **Major GC** (Full GC).
+
+**Stop-The-World**: GC 수행 중 애플리케이션 실행이 멈추는 현상. GC 튜닝은 이를 줄이는 것.
+
+</details>
+
+<details>
+<summary>Java의 동시성 이슈와 해결 (Synchronized, Volatile)</summary>
+
+- **Synchronized**: 락(Lock)을 걸어 한 번에 하나의 스레드만 접근 허용 (가시성 + 원자성 보장).
+- **Volatile**: CPU 캐시가 아닌 **메인 메모리에서 직접 읽기/쓰기** (가시성 보장, 원자성 보장 X). 상태 플래그 용도로 적합.
+- **Atomic Class**: CAS 알고리즘으로 락 없이 스레드 안전한 연산 제공.
+
+</details>
+
+<details>
+<summary>동시성 로직에 쓰이는 자료구조 (ConcurrentHashMap)</summary>
+
+**HashMap**은 동기화되지 않음. **Hashtable**은 전체에 락을 걸어 느림.
+**ConcurrentHashMap**:
+- **Segment Lock** (Java 7): 큰 맵을 나누어 부분적으로 락.
+- **Bucket Lock / CAS** (Java 8+): 각 버킷(노드) 별로 락을 걸거나 CAS 사용. 동시성 성능 극대화.
+
+</details>
+
+<details>
+<summary>String, StringBuilder, StringBuffer</summary>
+
+- **String**: **불변**(Immutable). 연산 시 매번 새 객체 생성.
+- **StringBuilder**: **가변**. 동기화 없음. 단일 스레드에서 빠름.
+- **StringBuffer**: **가변**. `Synchronized`로 동기화. 멀티 스레드 안전.
+
+</details>
+
+<details>
+<summary>Interface vs Abstract Class</summary>
+
+- **Interface**: "구현 명세(Can-do)". 다중 상속 가능. 상수와 추상 메서드 위주 (Java 8부터 default 메서드 가능).
+- **Abstract Class**: "공통 기능 추상화(Is-a)". 단일 상속. 상태(멤버 변수)를 가질 수 있음.
+
+</details>
+
+<details>
+<summary>제네릭(Generics)과 타입 소거(Type Erasure)</summary>
+
+- **제네릭**: 컴파일 타임에 타입을 체크하여 타입 안정성을 높이고 형변환 번거로움을 줄임.
+- **타입 소거**: 컴파일 후 런타임에는 제네릭 타입 정보가 제거됨(`List<String>` -> `List`). Java 하위 호환성을 위함.
+
+</details>
+
+<details>
+<summary>Checked vs Unchecked Exception</summary>
+
+- **Checked**: `Exception` 상속. **반드시 처리(try-catch)해야 함**. (IOException 등)
+- **Unchecked**: `RuntimeException` 상속. 명시적 처리 강제 안 함. (NullPointerException 등)
+- Spring 트랜잭션 롤백은 기본적으로 **Unchecked Exception**에서만 발생.
+
+</details>
+
+<details>
+<summary>equals()와 hashCode()의 관계는?</summary>
+
+- **equals()**: 두 객체의 **논리적 동등성**(값의 일치)을 비교.
+- **hashCode()**: 객체를 식별하는 **정수값**을 반환 (해시 테이블 등에서 사용).
+- **계약**(Contract):
+  1. `equals()`가 `true`이면, 두 객체의 `hashCode()`는 반드시 같아야 함.
+  2. `hashCode()`가 같다고 해서 `equals()`가 반드시 `true`일 필요는 없음 (해시 충돌).
+  - equals를 재정의할 때 hashCode를 재정의하지 않으면, 같은 값을 가진 객체가 해시 컬렉션(HashMap, HashSet)에서 다른 객체로 취급되어 값을 찾지 못하는 오동작 발생.
+
+</details>
+
+<details>
+<summary>Primitive Type과 Wrapper Class의 차이</summary>
+
+- **Primitive Type** (기본형): `int`, `long`, `boolean` 등. **Stack** 메모리에 실제 값 저장. `null` 불가. 산술 연산 빠름.
+- **Wrapper Class**: `Integer`, `Long`, `Boolean` 등. **Heap** 메모리에 객체로 저장. `null` 가능. Collection(`<Integer>` 등)에서 사용.
+- **Auto-Boxing / Unboxing**: Java 5부터 컴파일러가 자동으로 변환해줌.
+
+</details>
+
+<details>
+<summary>static 키워드의 의미와 메모리 위치</summary>
+
+- **static**: 객체 생성이 아닌 **클래스에 속한** 멤버임을 명시.
+- **메모리**: 프로그램 시작 시 **Method Area** (Static Area)에 할당되고, 프로그램 종료 시 해제됨.
+- **특징**: 모든 인스턴스가 공유. 인스턴스 생성 없이 `ClassName.variable`로 접근 가능.
+
+</details>
+
+<details>
+<summary>Java 8의 대표적인 특징 (Stream, Lambda, Optional)</summary>
+
+1. **Lambda Expression**: 함수형 프로그래밍 지원. 익명 클래스를 간결하게 표현. `(a, b) -> a + b`
+2. **Stream API**: 컬렉션 데이터를 선언형으로 처리. 병렬 처리 용이. `list.stream().filter(...).map(...).collect(...)`
+3. **Optional**: NullPointerException 방지를 위한 Wrapper 클래스. 명시적으로 `null` 가능성을 표현. `Optional.ofNullable(...)`
+
+</details>
+
+<details>
+<summary>Java의 Call by Value vs Call by Reference</summary>
+
+Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
+
+- **기본형**(Primitive): 값이 복사되어 전달됨. 메서드에서 변경해도 원본 영향 없음.
+- **참조형**(Reference): **주소값의 복사본**이 전달됨.
+  - 메서드 내부에서 객체의 멤버 변수(`obj.name = "xx"`)를 바꾸면 **원본도 바뀜** (같은 힙 메모리를 가리키므로).
+  - 하지만 변수 자체(`obj = newObj`)를 바꾸면 **원본은 바뀌지 않음** (복사된 주소값만 바뀌므로).
+
+</details>
+
+<details>
+<summary>Reflection(리플렉션) 이란?</summary>
+
+구체적인 클래스 타입을 알지 못해도, 컴파일 된 바이트 코드를 통해 해당 클래스의 메서드, 타입, 변수(private 포함)들에 접근할 수 있도록 해주는 자바 API입니다.
+- **사용처**: Spring Framework의 DI(@Autowired), JPA 엔티티 바인딩 등 프레임워크 내부에서 주로 사용됨.
+- **단점**: 오버헤드가 있어 성능 저하 가능성, 캡슐화 저해.
+
+</details>
+
+<details>
+<summary>final 키워드의 사용법</summary>
+
+1. **final variable**: 값을 변경할 수 없는 상수 (재할당 불가).
+2. **final method**: 오버라이딩(Overriding) 불가.
+3. **final class**: 상속(Inheritance) 불가.
+
+</details>
+
+<details>
+<summary>직렬화(Serialization) 란?</summary>
+
+자바 객체를 **바이트 스트림**으로 변환하여 파일 저장하거나 네트워크로 전송할 수 있게 하는 것.
+- `implements Serializable` 인터페이스 필요.
+- 반대는 **역직렬화**(Deserialization).
+- `serialVersionUID`로 버전 관리 권장.
+
+</details>
+
+## 5. Spring Framework
+
+<details>
+<summary>Spring MVC 요청 처리 흐름</summary>
+
+Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **HandlerAdapter** -> **Controller**(비즈니스 로직) -> **ViewResolver** -> View/Data Response
+
+</details>
+
+<details>
+<summary>IoC (Inversion of Control) 와 DI (Dependency Injection)</summary>
+
+- **IoC**(제어의 역전): 객체의 생명주기 관리를 개발자가 아닌 프레임워크(Container)가 담당.
+- **DI**(의존성 주입): 필요한 의존 객체를 직접 생성하지 않고 외부(Container)에서 주입받음. 결합도를 낮춤.
+- 생성자 주입(Constructor Injection)을 권장 (불변성, 순환참조 방지).
+
+</details>
+
+<details>
+<summary>Spring Bean 생명주기</summary>
+
+생성 -> 의존성 주입 -> 초기화(@PostConstruct) -> 사용 -> 소멸(@PreDestroy)
+
+</details>
+
+<details>
+<summary>AOP (Aspect Oriented Programming)</summary>
+
+핵심 로직과 공통 관심사(로깅, 트랜잭션, 보안 등)를 분리하여 모듈화하는 것.
+Spring은 프록시 패턴을 사용하여 AOP를 구현합니다.
+
+</details>
+
+<details>
+<summary>@Transactional 동작 원리</summary>
+
+AOP 프록시를 통해 동작합니다.
+1. 메서드 호출 시 프록시가 가로챔.
+2. 트랜잭션 시작 (AutoCommit off).
+3. 실제 메서드 실행.
+4. 성공 시 Commit, 예외 발생(Runtime Exception) 시 Rollback.
+
+</details>
+
+<details>
+<summary>JPA N+1 문제와 해결 방법</summary>
+
+**N+1 문제**: 1번의 쿼리로 조회한 엔티티와 연관된 엔티티를 조회하기 위해 N번의 추가 쿼리가 발생하는 성능 이슈.
+
+**해결**:
+1. **Fetch Join**: `select m from Member m join fetch m.team` (한 방 쿼리).
+2. **@EntityGraph**: 어노테이션으로 fetch join 효과.
+3. **Batch Size**: `IN` 절을 사용하여 일정 개수만큼 묶어서 조회.
+
+</details>
+
+<details>
+<summary>Filter vs Interceptor</summary>
+
+- **Filter**: Servlet Container 레벨 (DispatcherServlet 앞). 보안, 인코딩 처리.
+- **Interceptor**: Spring MVC 레벨 (DispatcherServlet 뒤, Controller 앞). 인증, 로깅, 공통 로직 처리.
+
+</details>
+
+<details>
+<summary>Spring과 Spring Boot의 차이점</summary>
+
+- **Spring Boot**는 Spring 프레임워크를 더 쉽게 사용할 수 있게 해주는 도구입니다.
+- **주요 차이**:
+  1. **의존성 관리**: `spring-boot-starter`로 버전 관리 자동화.
+  2. **Auto Configuration**: `@EnableAutoConfiguration`으로 복잡한 설정 자동화.
+  3. **내장 WAS**: Tomcat이 내장되어 있어 별도 설치 없이 `jar` 실행 가능.
+
+</details>
+
+<details>
+<summary>POJO (Plain Old Java Object)와 PSA (Portable Service Abstraction)</summary>
+
+- **POJO**: 특정 프레임워크나 기술에 종속되지 않은 순수한 자바 객체. (객체지향 설계 원칙 준수 용이)
+- **PSA**: 환경과 구현 기술의 변경과 무관하게 일관된 접근 방식을 제공하는 추상화 구조.
+  - 예: `@Transactional` (JDBC, JPA, Hibernate 어떤 기술을 쓰든 동일한 방식으로 트랜잭션 제어), Spring Cache, Spring Web MVC.
+
+</details>
+
+## 6. Security & Infrastructure
+
+<details>
+<summary>OAuth 2.0 동작 흐름 (Authorization Code 방식)</summary>
+
+1. **사용자**: "로그인" 버튼 클릭 -> 서비스가 **인증 서버**(카카오/구글) 로그인 페이지로 리다이렉트.
+2. **인증 서버**: 사용자 로그인 및 정보 제공 동의 -> 서비스에 **Authorization Code** 전달.
+3. **서비스**: Code를 인증 서버에 전달하고 **Access Token** 발급 요청.
+4. **인증 서버**: Token 발급.
+5. **서비스**: Access Token으로 사용자 정보 조회.
+
+</details>
+
+<details>
+<summary>JWT (Json Web Token)의 구조와 장단점</summary>
+
+- **구조**: `Header` (알고리즘), `Payload` (데이터/Claim), `Signature` (서명).
+- **장점**: Stateless(서버 저장소 불필요), 확장성 좋음.
+- **단점**: 토큰 크기가 큼, 한 번 발급되면 만료 전까지 취소 불가능 (Blacklist 필요).
+
+</details>
+
+<details>
+<summary>SQL Injection과 방어 방법</summary>
+
+악의적인 SQL 구문을 주입하여 DB 데이터를 조작하는 공격.
+**방어**:
+- **PreparedStatement** 사용 (바인딩 변수 사용, 컴파일 시점에 쿼리 구조 고정).
+- ORM (JPA) 사용.
+
+</details>
+
+<details>
+<summary>XSS (Cross Site Scripting)와 CSRF (Cross Site Request Forgery)</summary>
+
+- **XSS**: 악성 스크립트를 웹 페이지에 삽입하여 사용자 정보를 탈취.
+  - 방어: 입력값 HTML 엔티티 코드로 변환 (`<` -> `&lt;`).
+- **CSRF**: 사용자가 의도치 않게 공격자가 심어둔 요청을 서버로 보내게 함.
+  - 방어: Referer 검증, CSRF Token 사용.
+
+</details>
+
+<details>
+<summary>CI/CD, Docker, Load Balancer 개념</summary>
+
+- **CI/CD**: 지속적 통합 및 배포 자동화 파이프라인.
+- **Docker**: 환경에 구애받지 않고 애플리케이션을 실행하는 컨테이너 기술.
+- **Load Balancer**: 트래픽을 여러 서버로 분산 (L4: IP/Port, L7: URL/Header).
+- **Monolithic Architecture vs Microservice Architecture (MSA)**
+    - **Monolithic**: 모든 모듈이 하나의 서비스(프로젝트) 안에 통합된 구조.
+      - 장점: 개발/배포/테스트가 단순함.
+      - 단점: 부분 장애가 전체에 영향, 빌드/배포 시간 증가, 기술 스택 변경 어려움.
+    - **MSA**: 서비스를 기능별로 작게 나누어 독립적으로 배포/실행하는 구조 (API 통신).
+      - 장점: 유연한 기술 선택, 개별 배포 가능, 장애 격리.
+      - 단점: 복잡한 트랜잭션 관리, 서비스 간 통신 비용, 운영 복잡도 증가.
+
+</details>
+
+## 8. CS & Etc (자료구조, 디자인패턴, Git, 일반)
+
+<details>
+<summary>Array와 LinkedList의 차이점</summary>
+
+| 구분          | Array (배열)            | LinkedList (연결 리스트)                 |
+| ------------- | ----------------------- | ---------------------------------------- |
+| 메모리        | 연속된 공간 할당        | 불연속적 공간 (노드와 포인터)            |
+| 접근 (Access) | 인덱스로 즉시 접근 O(1) | 순차 접근 O(N)                           |
+| 삽입/삭제     | 데이터 이동 필요 O(N)   | 포인터 변경만 필요 O(1) (탐색 시간 제외) |
+| 크기          | 고정                    | 가변                                     |
+
+</details>
+
+<details>
+<summary>Stack과 Queue의 차이</summary>
+
+- **Stack**: **LIFO** (Last In First Out). 나중에 들어간 게 먼저 나옴. (함수 호출 스택, 뒤로가기)
+- **Queue**: **FIFO** (First In First Out). 먼저 들어간 게 먼저 나옴. (작업 큐, 프린터 대기열)
+
+</details>
+
+<details>
+<summary>Git Merge와 Rebase의 차이</summary>
+
+- **Merge**: 두 브랜치의 변경 사항을 합쳐 **새로운 커밋(Merge Commit)**을 생성. 히스토리가 그대로 남음(비선형).
+- **Rebase**: 현재 브랜치의 베이스를 대상 브랜치의 최신 커밋으로 이동. 히스토리를 **한 줄로 깔끔하게 정렬(선형)**하지만, 기존 커밋 해시가 변경됨(공유 브랜치에서 주의).
+
+</details>
+
+<details>
+<summary>디자인 패턴 (Singleton, Strategy, Factory)</summary>
+
+1. **Singleton**: 클래스의 인스턴스를 **오직 하나만** 생성하여 전역에서 공유. (DB 커넥션 풀, 설정 관리)
+2. **Strategy**: 알고리즘(전략)을 객체로 캡슐화하여 런타임에 교체 가능하도록 함. (결제 방식 선택, 정렬 알고리즘 교체)
+3. **Factory Method**: 객체 생성을 서브클래스에 위임하여 구체적인 클래스 의존성을 낮춤.
+
+</details>
+
+<details>
+<summary>프레임워크(Framework)와 라이브러리(Library)의 차이</summary>
+
+**제어의 흐름(Inversion of Control)**이 누구에게 있느냐의 차이입니다.
+
+- **Library**: 개발자가 흐름을 제어하며, 필요할 때 라이브러리의 코드를 호출해 사용합니다. (개발자 -> 코드)
+- **Framework**: 프레임워크가 흐름을 제어하며, 개발자가 작성한 코드를 프레임워크가 호출해 실행합니다. (프레임워크 -> 코드)
+  - 예: Spring이 개발자의 Controller를 찾아서 실행함.
+
+</details>
+
+<details>
+<summary>동기(Synchronous) vs 비동기(Asynchronous) / 블로킹(Blocking) vs 논블로킹(Non-blocking)</summary>
+
+- **동기와 비동기** (순서와 결과):
+  - **Sync**: 요청 후 결과를 받을 때까지 대기하거나, 계속 확인(Polling). 순서가 보장됨.
+  - **Async**: 요청 후 결과를 기다리지 않고 다음 작업 수행. 결과는 콜백(Callback)이나 이벤트로 받음.
+  
+- **블로킹과 논블로킹** (제어권):
+  - **Blocking**: 다른 작업이 끝날 때까지 제어권을 넘겨주지 않고 대기.
+  - **Non-blocking**: 제어권을 바로 반환하여 다른 작업을 할 수 있게 함.
+
+> **자주 묻는 예**: Node.js는 Single Thread 기반의 **Non-blocking I/O** 모델을 사용하여 높은 처리량을 가집니다.
+
+</details>
+
+<details>
+<summary>TDD (Test Driven Development) 란?</summary>
+
+**테스트 주도 개발**: 실제 코드를 작성하기 전에 **테스트 코드를 먼저 작성**하는 개발 방식.
+- **Cycle**: Red(실패하는 테스트) -> Green(테스트 통과를 위한 최소 코드) -> Refactor(코드 개선).
+- **장점**: 코드 품질 향상, 디버깅 시간 단축, 문서화 효과.
+- **단점**: 초기 개발 생산성 저하.
+
+</details>
+
+<details>
+<summary>컴파일 타임(Compile Time)과 런타임(Runtime)의 차이</summary>
+
+- **Compile Time**: 소스 코드를 기계어(또는 바이트코드)로 변환하는 시점.
+  - 에러: 문법 오류, 타입 체크 (`Syntax Error`) -> 발견하기 쉽고 안전함.
+- **Runtime**: 컴파일 된 프로그램이 실행되는 시점.
+  - 에러: 0으로 나누기, NullPointer, 메모리 부족 (`Runtime Error`) -> 심각한 버그 초래.
+
+</details>
