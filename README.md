@@ -1021,12 +1021,77 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 <br>
 
-**HashMap**은 동기화되지 않음. **Hashtable**은 전체에 락을 걸어 느림.
-**ConcurrentHashMap**:
-- **Java 7 (Segment Lock)**: 맵을 여러 세그먼트로 나누어 부분적으로 락을 걺.
-- **Java 8+ (Bucket Lock / CAS)**:
-  - 각 버킷(노드)의 첫 번째 노드에만 `synchronized`를 걸거나,
-  - **CAS (Compare-And-Swap)** 알고리즘을 사용하여 락 없이 원자적 연산 수행.
+**HashMap vs Hashtable vs ConcurrentHashMap**
+
+| 구분                  | Thread-Safe | 특징                                                        |
+| :-------------------- | :---------- | :---------------------------------------------------------- |
+| **HashMap**           | X           | 빠름. 멀티스레드 환경에서 사용 불가.                        |
+| **Hashtable**         | O           | 모든 메서드에 `synchronized`가 걸려있어 매우 느림. (비권장) |
+| **ConcurrentHashMap** | O           | **CAS + Synchronized**를 혼합하여 성능을 극대화.            |
+
+**ConcurrentHashMap 동작 원리 (Java 8+)**
+기존(Java 7)의 Segment Lock 방식에서 발전하여, **버킷 단위 동기화**를 사용합니다.
+
+1.  **빈 버킷에 데이터 삽입 시 (CAS 사용)**
+    -   Lock을 걸지 않고 **CAS** (Compare-And-Swap) 알고리즘을 사용해 원자적으로 삽입합니다.
+    -   충돌이 없으면 매우 빠르게 처리됩니다.
+
+2.  **버킷에 이미 데이터가 있을 시 (Synchronized 사용)**
+    -   해당 버킷의 **첫 번째 노드** (Head)에만 `synchronized`를 걸어 잠급니다.
+    -   다른 버킷에는 영향을 주지 않으므로 동시성이 높습니다.
+
+```java
+// 실제 구현 로직 (단순화)
+final V putVal(K key, V value, boolean onlyIfAbsent) {
+    int hash = spread(key.hashCode());
+    
+    for (Node<K,V>[] tab = table;;) {
+        Node<K,V> f; int n, i, fh;
+        
+        // 1. 버킷이 비어있으면 -> CAS로 삽입 (Lock 없음!)
+        if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+            if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value, null)))
+                break; 
+        }
+        // 2. 버킷에 값이 있으면 -> synchronized (해당 버킷만 Lock)
+        else {
+            synchronized (f) {
+                if (tabAt(tab, i) == f) {
+                    // 리스트 or 트리에 노드 추가 로직
+                }
+            }
+        }
+    }
+    return null;
+}
+```
+
+> **Q. 왜 빈 버킷은 CAS고, 차 있으면 Synchronized인가요?**
+>
+> 1.  **빈 버킷** (CAS):
+>     -   아무것도 없는 자리에 "새 노드 꽂기"는 단순한 교체 작업입니다.
+>     -   복잡한 포인터 연결이 필요 없으므로, **Lock보다 훨씬 가벼운 CAS** (낙관적 락)로 처리하는 게 성능상 이득입니다.
+>
+> 2.  **데이터가 있는 경우 (Synchronized)**:
+>     -   이미 노드가 있다면 **LinkedList**나 **Red-Black Tree** 형태로 연결되어 있습니다.
+>     -   **왜 헤드만 잠글까?**: 자바의 `synchronized`는 객체 단위로 락을 겁니다. 별도의 락 객체를 두는 대신, 리스트의 진입점인 **헤드 노드 객체 자체**를 락으로 사용하면 메모리를 아끼면서 해당 버킷 전체를 독점하는 효과를 낼 수 있습니다. (헤드를 못 지나가면 뒤도 못 가니까요!)
+>     -   **어떻게 잠그나?**: 코드로는 `synchronized(node)` 와 같이 **노드 객체 자체를 파라미터**로 넘겨서 락을 겁니다.
+        > ```java
+        > // (참고) 일반적인 전용 락 객체 사용 방식
+        > class MyClass {
+        >     // 1. 전용 락 객체 생성
+        >     private final Object lock = new Object();  // 이 객체의 모니터 락 사용
+        >     
+        >     public void method() {
+        >         synchronized(lock) {  // lock 객체의 모니터 락 획득
+        >             // 임계 영역
+        >         }
+        >     }
+        > }
+        > ```
+    -   새 노드를 뒤에 연결하거나 트리를 회전시키는 작업은 여러 단계의 포인터 변경이 필요합니다.
+    -   이때 CAS를 쓰면 실패 시 계속 재시도(Retry)해야 해서 오히려 CPU 낭비가 심해집니다.
+    -   따라서 해당 **버킷의 헤드(첫 노드)**만 딱 잡고(`synchronized`) 안전하게 처리하는 게 효율적입니다. 이 방식을 통해 **다른 버킷에 대한 접근은 차단하지 않으므로** 동시성이 유지됩니다.
 
 </details>
 
@@ -1069,6 +1134,42 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 - **제네릭**: 컴파일 타임에 타입을 체크하여 타입 안정성을 높이고 형변환 번거로움을 줄임.
 - **타입 소거**: 컴파일 후 런타임에는 제네릭 타입 정보가 제거됨(`List<String>` -> `List`). Java 하위 호환성을 위함.
 
+**효과 1. 타입 안정성 (Type Safety)**
+
+> **제네릭 없이 사용**
+> ```java
+> ArrayList list = new ArrayList();
+> list.add("문자열");
+> list.add(123);  // 컴파일 OK, 런타임에 문제 발생 가능
+> 
+> String str = (String) list.get(1);  // ClassCastException 위험!
+> ```
+>
+> **제네릭 사용**
+> ```java
+> ArrayList<String> list = new ArrayList<>();
+> list.add("문자열");
+> // list.add(123);  // 컴파일 에러! ← 여기서 잡힘
+> 
+> String str = list.get(1);
+> ```
+
+**효과 2. 형변환 번거로움 제거**
+
+> **전 (캐스팅 필요)**
+> ```java
+> List list = new ArrayList();
+> list.add(new Integer(10));
+> Integer num = (Integer) list.get(0);  // 매번 명시적 형변환 (Casting)
+> ```
+>
+> **후 (자연스러운 코드)**
+> ```java
+> List<Integer> list = new ArrayList<>();
+> list.add(10);
+> Integer num = list.get(0);  // 자동 타입 변환 (형변환 불필요)
+> ```
+
 </details>
 
 <details>
@@ -1089,6 +1190,13 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 - **equals()**: 두 객체의 **논리적 동등성**(값의 일치)을 비교.
 - **hashCode()**: 객체를 식별하는 **정수값**을 반환 (해시 테이블 등에서 사용).
+
+> **Q. equals/hashCode를 재정의 안 하고 HashMap에 넣으면?**
+> 1.  `Object`의 기본 `hashcode()`는 **객체의 메모리 주소** 기반으로 값을 생성합니다.
+> 2.  따라서 필드 값이(내용이) 똑같은 객체라도, **서로 다른 해시코드**가 나와서 아예 **다른 버킷**에 저장이 됩니다.
+> 3.  결국 `map.get(new Key(...))`로 값을 찾으려 해도 `null`이 나옵니다. (영원히 못 찾음 😱)
+> 4.  참고로 `Object.equals()`도 기본적으로 `==` (주소 비교)와 동일합니다.
+
 - **계약**(Contract):
   1. `equals()`가 `true`이면, 두 객체의 `hashCode()`는 반드시 같아야 함.
   2. `hashCode()`가 같다고 해서 `equals()`가 반드시 `true`일 필요는 없음 (해시 충돌).
@@ -1136,15 +1244,38 @@ Apache Lucene 기반의 **역인덱스(Inverted Index) 기반 분산 검색 엔�
 
 Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 
-- **기본형**(Primitive): 값이 복사되어 전달됨. 메서드에서 변경해도 원본 영향 없음.
-- **참조형**(Reference): **주소값의 복사본**이 전달됨.
-  - 메서드 내부에서 객체의 멤버 변수(`obj.name = "xx"`)를 바꾸면 **원본도 바뀜** (같은 힙 메모리를 가리키므로).
-  - 하지만 변수 자체(`obj = newObj`)를 바꾸면 **원본은 바뀌지 않음** (복사된 주소값만 바뀌므로).
+1.  **용어 정의**
+    -   **Call by Value (값에 의한 호출)**: 함수 호출 시 인자로 전달되는 **변수의 값을 복사**하여 함수로 전달합니다. (원본 보존)
+    -   **Call by Reference (참조에 의한 호출)**: 함수 호출 시 인자로 전달되는 **변수의 메모리 주소(참조) 자체**를 전달합니다. (원본 변경 가능, C++ 등에서 지원)
+
+2.  **Java의 동작 방식**
+    -   **기본형**(Primitive): 값이 그대로 **복사**되어 전달됨. (원본 영향 X)
+    -   **참조형**(Reference): **주소값의 복사본**이 전달됨. (이게 핵심!)
+        -   메서드 안에서 `member.name = "변경"` 처럼 **내부 상태**를 바꾸면 -> 주소를 타고 가서 바꾸니 **원본도 바뀜**.
+        -   메서드 안에서 `member = new Member()` 처럼 **객체 자체**를 갈아 끼우면 -> **복사된 주소 변수**만 새 곳을 가리키게 되므로 **원본은 안 바뀜**.
+
+> **`main`에서 `func(obj)` 호출 후 `obj = newObj` 할 때**
+>
+> **1. Java (Call by Value)**: 주소값(0x10)을 **복사**해서 줌
+> ```text
+> mainVar (0x10) -------------> [객체 A]
+>
+> paramVar (0x10) --(new)-----> [객체 B] (0x20)
+>    ㄴ 0x20으로 바뀜               ㄴ mainVar는 여전히 [객체 A]를 가리킴 (영향 X)
+> ```
+>
+> **2. Call by Reference**: 변수 공간(링크) 자체를 공유
+> ```text
+> mainVar  (0x10) --(공유)--------> [객체 A]
+>            |
+> paramVar (동일 공간) --(new)-----> [객체 B] (0x20)
+>                                     ㄴ mainVar도 같이 [객체 B]를 가리키게 됨 (영향 O)
+> ```
 
 </details>
 
 <details>
-<summary>Reflection(리플렉션) 이란?</summary>
+<summary>Reflection(리플렉션)이란?</summary>
 
 <br>
 
