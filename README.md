@@ -323,13 +323,49 @@ UDP 자체는 신뢰성을 보장하지 않지만, **애플리케이션 레벨�
 - **Sliding Window**: 수신 측의 버퍼 크기(Window Size)만큼 확인 응답 없이 연속 전송. ACK를 받으면 윈도우를 옆으로 이동(Sliding)시킴.
 
 **2. 혼잡 제어 (Congestion Control)**: 송신 측과 **네트워크**의 혼잡도 해결
+<img width="1148" height="959" alt="image" src="https://github.com/user-attachments/assets/59369fa4-e029-483c-9c3c-6e1e0ff19ee0" />
+
+
 - **기본 동작 원리**:
   - **Slow Start**: 패킷을 1개, 2개, 4개... 지수적으로 늘려가며 전송 속도를 올림.
-  - **Congestion Avoidance**: 임계치(Threshold) 도달 시 선형적으로 1씩 증가.
+  - **Congestion Avoidance**: 임계치(Threshold) 도달 시 선형적으로 1씩 증가. 
+
 - **대표적인 알고리즘**:
+<img width="1153" height="263" alt="image" src="https://github.com/user-attachments/assets/32494469-0261-4f2c-8fa7-ab8e9d1f11de" />
+
   - **TCP Tahoe**: 패킷 유실 시 윈도우 크기를 무조건 **1로 초기화**. (처음부터 다시 Slow Start)
   - **TCP Reno**: 패킷 유실(3 Duplicate ACKs) 시 윈도우 크기를 **절반으로 줄임**. (Fast Recovery)
+    
+    <img width="1165" height="1013" alt="image" src="https://github.com/user-attachments/assets/b8e57758-efcf-4f99-9ab8-a433dd035ff9" />
+
+    > **Note: TCP Reno 빠른 회복(Fast Recovery) 상세 동작원리**
+    >
+    > **1. 왜 +3 인가? (ssthresh + 3)**
+    > - 3개의 중복 ACK가 도착했다는 것은, 패킷 3개(예: 11, 12, 13)가 무사히 클라이언트에 도착했다는 뜻입니다.
+    > - 즉 **네트워크에서 패킷 3개가 빠져나갔으므로**, 그만큼 네트워크 버퍼에 **3개의 빈 공간**이 생겼다고 봅니다.
+    > - **임계점 설정**: 이때 혼잡이 발생했다고 판단하여, **현재의 `CWND`를 절반으로 줄여 `ssthresh`로 설정**합니다. (`ssthresh = Current CWND / 2`)
+    > - **윈도우 재설정**: 줄어든 임계치(`ssthresh`)에, 확보된 공간 3개만큼 더 보내기 위해 `+3`을 합니다.
+    > - 예: `Current CWND = 16`이었다면, `ssthresh = 8`. `New CWND = 8 + 3 = 11`.
+    >
+    > **2. 추가 중복 ACK마다 +1 하는 이유**
+    > - 빠른 회복 도중에도 중복 ACK가 계속 온다면, 이는 또 다른 패킷이 클라이언트에 도착해 네트워크를 빠져나갔다는 증거입니다.
+    > - 따라서 빠져나간 만큼 채워 넣기 위해 `CWND`를 1씩 증가시킵니다. (Inflating Window)
+    > - 4번째 중복 ACK: `CWND = 11 + 1 = 12`
+    >
+    > **3. 왜 회복 후 CWND = ssthresh 인가?**
+    > - 유실되었던 패킷 재전송에 대한 **새로운 ACK**(ALL ACK)가 도착하면 회복이 끝난 것입니다.
+    > - 빠른 회복 중에 부풀렸던 `CWND`를 버리고, 혼잡 제어를 시작하기로 했던 기준점인 `ssthresh` 값으로 복귀하여 **Congestion Avoidance**(선형 증가)를 수행합니다.
+    > - `CWND = ssthresh = 8`
+    >
+    > **4. Reno vs Tahoe 차이**
+    > - **Tahoe**: 3 Duplicate ACK 시 `CWND = 1`로 밀어버리고 **Slow Start**부터 다시 시작. (심각한 성능 저하)
+    > - **Reno**: 3 Duplicate ACK 시 `CWND`를 절반으로 줄이고 **Fast Recovery** 진입. (속도 유지 유리)
+
+
   - **TCP CUBIC**: (현재 리눅스 기본값) 3차 함수 곡선을 이용해 윈도우 크기를 유연하게 조절.
+ 
+
+
 
 </details>
 
