@@ -1317,11 +1317,20 @@ Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 <img width="1049" height="459" alt="image" src="https://github.com/user-attachments/assets/8e51314f-352a-4f7b-861c-46e21086854b" />
 <br>
 
-Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **HandlerAdapter** -> **Controller**(비즈니스 로직) -> **ViewResolver** -> View/Data Response
+Client -> **DispatcherServlet** -> **HandlerMapping** (Controller 찾기) -> **HandlerAdapter** -> **Controller** (비즈니스 로직) -> **ViewResolver** -> View/Data Response
+
+**처리 흐름 (Case by Case)**
+
+1.  **SSR** (서버 사이드 렌더링) - HTML 반환 (`@Controller`)
+    -   `Client` -> `DispatcherServlet` -> `HandlerMapping` -> `HandlerAdapter` -> `Controller` -> **ViewResolver 확인** -> `View(JSP/Thymeleaf)` -> `HTML Response`
+
+2.  **REST API** - JSON 데이터 반환 (`@RestController`, `@ResponseBody`)
+    -   `Client` -> `DispatcherServlet` -> `HandlerMapping` -> `HandlerAdapter` -> `Controller` -> **HttpMessageConverter (Jackson)** -> `JSON Response`
+    -   *특징: ViewResolver를 거치지 않고, 컨버터가 Body에 데이터를 직접 씁니다.*
 
 **상세 주요 컴포넌트 역할**
 
-1.  **DispatcherServlet (Front Controller)**
+1.  **DispatcherServlet** (Front Controller)
     -   Spring MVC의 핵심으로, 모든 HTTP 요청을 가장 먼저 받아 적절한 컴포넌트(핸들러, 뷰 등)로 위임합니다.
     -   `doDispatch()` 메서드에서 전체적인 요청 처리 파이프라인(매핑, 어댑터 실행, 렌더링)을 조율합니다.
 
@@ -1418,8 +1427,8 @@ public class MyBean {
 스프링은 런타임에 **프록시(Proxy) 객체**를 만들어서 공통 로직을 수행합니다.
 
 1.  **Aspect**: 공통 기능 모듈 그 자체 (예: '로그 출력 기능'). (**Advice** + **Pointcut**)
-2.  **Advice**: **"언제"** 공통 로직을 실행할지 정의 (Before, After, Around 등).
-3.  **Pointcut**: **"어디에"** 적용할지 필터링하는 식 (예: `com.soma.service.*` 패키지의 모든 메서드).
+2.  **Advice**: "**언제**" 공통 로직을 실행할지 정의 (Before, After, Around 등).
+3.  **Pointcut**: "**어디에**" 적용할지 필터링하는 식 (예: `com.soma.service.*` 패키지의 모든 메서드).
 4.  **JoinPoint**: 적용 **가능한** 모든 지점 (메서드 실행, 생성자 호출 등). 스프링 AOP는 **메서드 실행** 시점만 지원합니다.
 5.  **Weaving**: 핵심 로직에 공통 로직(Advice)을 실제로 끼워 넣는 과정.
 6.  **Proxy**: 타겟 객체를 감싸서 요청을 가로채는 대리자 객체. (JDK Dynamic Proxy / CGLIB)
