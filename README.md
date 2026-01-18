@@ -1431,24 +1431,114 @@ public class MyBean {
 **상세 설명 및 용어**
 스프링은 런타임에 **프록시(Proxy) 객체**를 만들어서 공통 로직을 수행합니다.
 
-1.  **Aspect**: 공통 기능 모듈 그 자체 (예: '로그 출력 기능'). (**Advice** + **Pointcut**)
-2.  **Advice**: "**언제**" 공통 로직을 실행할지 정의 (Before, After, Around 등).
-3.  **Pointcut**: "**어디에**" 적용할지 필터링하는 식 (예: `com.soma.service.*` 패키지의 모든 메서드).
-4.  **JoinPoint**: 적용 **가능한** 모든 지점 (메서드 실행, 생성자 호출 등). 스프링 AOP는 **메서드 실행** 시점만 지원합니다.
-5.  **Weaving**: 핵심 로직에 공통 로직(Advice)을 실제로 끼워 넣는 과정.
-6.  **Proxy**: 타겟 객체를 감싸서 요청을 가로채는 대리자 객체. (JDK Dynamic Proxy / CGLIB)
+1.  **Aspect** (`@Aspect`)
+    -   공통 기능(Advice)과 적용 장소(Pointcut)를 묶은 모듈입니다.
+    ```java
+    @Aspect
+    @Component
+    public class LogAspect { ... }
+    ```
 
+2.  **Pointcut** (`@Pointcut`)
+    -   **"어디에"** 적용할지 타겟을 선별하는 식입니다.
+    ```java
+    // 반환타입 상관없음(*) com.example.service패키지하위(.*) 모든메서드(*(..))
+    @Pointcut("execution(* com.example.service.*.*(..))")
+    public void serviceLayer() {} 
+    ```
+
+3.  **Advice** (`@Before`, `@After`, `@Around`)
+    -   **"언제"** 공통 로직을 실행할지 정의합니다.
+    ```java
+    // 위에서 정의한 serviceLayer() 포인트컷 실행 "전"에 동작
+    @Before("serviceLayer()")
+    public void beforeMethod() {
+        System.out.println("메서드 실행 전입니다!");
+    }
+    
+    // 메서드 실행 "전후"를 모두 제어 (가장 강력함)
+    @Around("serviceLayer()")
+    public Object aroundMethod(ProceedingJoinPoint pjp) throws Throwable {
+        long start = System.currentTimeMillis();
+        
+        try {
+            return pjp.proceed(); // 실제 타겟 메서드 실행
+        } finally {
+            long end = System.currentTimeMillis();
+            System.out.println("실행 시간: " + (end - start) + "ms");
+        }
+    }
+    ```
+
+4.  **JoinPoint**
+    -   **현재 실행 중인 지점**의 정보를 담고 있는 객체입니다. (메서드왕 파라미터 정보 등)
+    ```java
+    @Before("...")
+    public void log(JoinPoint joinPoint) {
+        // 실행되는 메서드 이름 가져오기
+        String methodName = joinPoint.getSignature().getName();
+        // 파라미터 값 가져오기
+        Object[] args = joinPoint.getArgs();
+        System.out.println(methodName + " 실행됨. 파라미터: " + Arrays.toString(args));
+    }
+    ```
+
+5.  **Weaving (위빙)**
+    -   작성한 Advice 코드를 실제 핵심 로직 코드 사이에 **끼워 넣는 연결 과정**입니다. (스프링은 런타임에 프록시 객체를 생성하여 위빙)
+
+6.  **Proxy (프록시)**
+    -   클라이언트가 거쳐가는 **대리자 객체**입니다.
+    -   `Client -> Proxy -> Target(실제 객체)` 흐름으로 진행됩니다.
+
+> **스프링의 대표적인 AOP 적용 사례**
+> 1.  **@Transactional**: `try-catch-rollback/commit` 코드를 감싸서 처리.
+> 2.  **@Cacheable**: 메서드 실행 전 캐시 확인 -> 있으면 바로 반환(Skip), 없으면 실행 후 저장.
+> 3.  **@Async**: 메서드 호출 시 가로채서 별도 스레드(TaskExecutor)에 할당하라고 지시.
+> 4.  **@Retryable**: 예외 발생 시 `catch`하여 설정된 횟수만큼 재시도(`proceed()` 재호출).
+
+> **Q. @Aspect만 붙이면 되나요?**
+> 아니요! **Aspect = Advice(할 일) + Pointcut(할 곳)** 입니다.
+> 껍데기(Aspect) 안에 '어디서(Pointcut) 무엇을(Advice) 할지'가 없으면 아무 일도 일어나지 않습니다.
+
+**실전 사용 예시 (종합)**
 ```java
-@Aspect
-@Component
-public class LoggingAspect {
-    // Pointcut: com.soma.service 패키지 하위의 모든 메서드
-    @Before("execution(* com.soma.service.*.*(..))") // Advice: 메서드 실행 전(Before)
-    public void logBefore(JoinPoint joinPoint) {
-        System.out.println("Method Start: " + joinPoint.getSignature().getName());
+@Aspect      // 1. Aspect 선언 (껍데기)
+@Component   // 2. 빈 등록
+public class PerformanceAspect {
+
+    // 3. Pointcut: "어디서?" -> com.example.service 패키지의 모든 메서드에서
+    @Pointcut("execution(* com.example.service.*.*(..))")
+    public void serviceLayer() {}
+
+    // 4. Advice: "무엇을?" -> 시간 측정을 해라
+    @Around("serviceLayer()") // 위에서 정의한 Pointcut 사용
+    public Object measureTime(ProceedingJoinPoint pjp) throws Throwable {
+        
+        // [메서드 정보 가져오기]
+        MethodSignature signature = (MethodSignature) pjp.getSignature();
+        String methodName = signature.getMethod().getName();
+        
+        System.out.println("[Start] " + methodName); // 메서드 실행 전
+        long start = System.currentTimeMillis();
+        
+        try {
+            // [실제 메서드 실행] 
+            // 이 proceed()를 호출해야만 비즈니스 로직(Target)으로 넘어갑니다.
+            return pjp.proceed(); 
+        } finally {
+            // 메서드 실행 후
+            long end = System.currentTimeMillis();
+            System.out.println("[End] " + methodName + " : " + (end - start) + "ms");
+        }
     }
 }
 ```
+ 
+> **Q. AOP는 메서드 단위로만 적용되나요?**
+> 네, **Spring AOP**는 "메서드 실행"만 가로챌 수 있습니다.
+> 1.  **필드/생성자**: 프록시 방식의 한계로 불가능합니다. (AspectJ 라이브러리 사용 시 가능)
+> 2.  **private 메서드**: 프록시가 상속(CGLIB)받거나 인터페이스를 구현해야 하는데 `private`은 접근 불가능하므로 적용 안 됩니다.
+> 3.  **내부 호출 (Self-Invocation)**: `this.method()` 처럼 자기 클래스 내부에서 호출하면 프록시를 거치지 않고 다이렉트로 호출하므로 AOP가 발동하지 않습니다.
 
 </details>
 
@@ -1469,7 +1559,13 @@ Spring AOP가 프록시 객체를 만들 때 사용하는 두 가지 핵심 기�
 
 > **요약**:
 > 옛날에는 "인터페이스가 있으면 JDK Proxy, 없으면 CGLIB"를 썼지만,
-> **최근(Spring Boot)**에는 성능 좋고 제약이 적은 **CGLIB**를 기본으로 사용해서 통일성을 유지합니다.
+> **최근**(Spring Boot)에는 성능 좋고 제약이 적은 **CGLIB**를 기본으로 사용해서 통일성을 유지합니다.
+
+> **Q. CGLIB는 리플렉션 없이 어떻게 정보를 가져오나요?**
+>
+> CGLIB는 **ASM**(자바 바이트코드 조작 프레임워크)을 사용하여 클래스의 `.class` 파일(바이트코드)을 직접 분석하고 조작합니다.
+> 1.  **Code Generation**: 런타임에 타겟 클래스를 상속받는 **새로운 클래스의 바이트코드를 메모리상에서 직접 생성**해버립니다.
+> 2.  **직접 호출**: 리플렉션처럼 "이름으로 메서드 찾기 -> 호출" 하는 비용 없이, 바이트코드 레벨에서 **부모 메서드를 직접 호출(`super.method()`)** 하도록 연결해두기 때문에 훨씬 빠릅니다.
 
 </details>
 
@@ -1523,6 +1619,175 @@ public class CherrydanApplication {
 </details>
 
 <details>
+<summary>JPA (Java Persistence API) 개념과 영속성 컨텍스트</summary>
+
+<br>
+
+**1. JPA란?**
+자바 진영의 **ORM**(Object-Relational Mapping) 기술 표준으로, 인터페이스의 모음입니다. (구현체: Hibernate 등)
+객체는 객체대로, 관계형 DB는 관계형 DB대로 설계하고, **ORM 프레임워크가 중간에서 매핑**해줍니다.
+
+**2. 왜 쓰나요? (장점)**
+*   **생산성**: 지루한 CRUD SQL을 작성하지 않아도 됩니다. (`jpa.save(member)`)
+*   **유지보수**: 필드 변경 시 모든 SQL을 수정할 필요가 없습니다.
+*   **패러다임 불일치 해결**: 상속, 연관관계, 객체 그래프 탐색 등 객체지향적인 코드로 DB를 다룰 수 있습니다.
+
+**단점 (기술적 한계)**
+*   **복잡한 쿼리의 한계**: 동적 쿼리나 복잡한 통계성 쿼리를 JPQL만으로 처리하기 어렵습니다. (**QueryDSL**이나 Native SQL이 필수적으로 요구됨)
+*   **세밀한 성능 제어의 어려움**: 메서드 하나로 쿼리가 자동 생성되므로, 의도치 않은 조인이나 비효율적인 쿼리가 발생할 수 있어 실행 계획 확인이 필수입니다.
+*   **N+1 문제**: 연관 관계 설정 시 즉시 로딩(EAGER) 등에 의해 불필요한 쿼리가 폭발할 수 있습니다.
+
+**3. 영속성 컨텍스트 (Persistence Context)**
+**엔티티를 영구 저장하는 환경**이라는 논리적인 개념입니다. (`EntityManager`가 관리)
+
+**핵심 기능 (엔티티 생명주기 관리)**
+1.  **1차 캐시**: 영속성 컨텍스트 내부에 있는 캐시 맵(`Map<ID, Entity>`).
+    *   조회 시 DB보다 먼저 1차 캐시를 확인하여 성능상의 이점을 얻습니다. (단, 트랜잭션 범위 내에서만 유효)
+2.  **동일성**(Identity) 보장: 같은 트랜잭션 내에서 같은 ID로 조회한 엔티티는 **`==` 비교 시 true**임이 보장됩니다.
+    *   **JPA가 없다면**(MyBatis 등): 같은 ID 데이터를 두 번 조회하면, **매번 새로운 객체**(`new`)가 생성되므로 주소값이 달라 `==` 비교가 **false**가 됩니다. (오직 `.equals()`로만 비교 가능)
+    *   **JPA**: 1차 캐시에 있는 **같은 객체 주소**를 반환하므로, 자바 컬렉션에서 꺼낸 것처럼 `==`이 **true**가 됩니다.
+3.  **트랜잭션을 지원하는 쓰기 지연**(Transactional Write-Behind):
+    *   `persist()`를 해도 바로 INSERT 쿼리가 나가지 않습니다.
+    *   **쓰기 지연 SQL 저장소**에 쿼리를 모아뒀다가, 트랜잭션 **커밋**(`commit`) 시점에 한 번에 날립니다(`flush`).
+    * **Flush(플러시)란?**: 영속성 컨텍스트의 변경 내용을 **DB에 동기화**하는 과정입니다. (INSERT, DELETE 등 쿼리 전송)
+       *   **주의 1**: **1차 캐시를 비우지 않습니다.** (그대로 유지됨)
+       *   **주의 2**: 플러시를 했다고 끝이 아닙니다. 실제 **커밋**(Commit)은 **트랜잭션이 끝나야** DB에 반영됩니다.
+4.  **변경 감지**(Dirty Checking):
+    *   엔티티의 데이터를 수정할 때 `update()` 같은 메서드를 부를 필요가 없습니다.
+    *   조회 당시의 상태(**스냅샷**)를 간직하고 있다가, 커밋 시점에 현재 상태와 비교하여 **변경된 부분만 UPDATE 쿼리**를 자동으로 생성합니다.
+
+**4. `save()` 메서드의 동작 원리 (Upsert)**
+JPA의 `save()`는 **저장**(Insert)과 **수정**(Update)을 모두 처리합니다.
+
+```java
+@Transactional
+@Override
+public <S extends T> S save(S entity) {
+    if (entityInformation.isNew(entity)) {
+        em.persist(entity); // ID가 없으면(null) -> 신규 저장 (INSERT)
+        return entity;
+    } else {
+        return em.merge(entity); // ID가 있으면 -> 병합 (SELECT 후 UPDATE)
+    }
+}
+```
+*   **새로운 엔티티**(`isNew`): 식별자(PK)가 `null`이거나 기본형 0일 때 -> `persist()` (영속화)
+*   **이미 있는 엔티티**: 식별자 값이 있을 때 -> `merge()`
+    *   **주의**: `merge`는 DB에서 데이터를 먼저 조회(SELECT)한 뒤 덮어쓰기 때문에 성능상 조금 불리할 수 있습니다. 변경 감지를 이용하는 것이 좋습니다.
+
+</details>
+
+<details>
+<summary>영속성 전이(Cascade)와 고아 객체</summary>
+
+<br>
+
+**1. 영속성 전이(Cascade)와 고아 객체(Orphan Removal)**
+부모 엔티티의 상태 변화를 자식 엔티티에게 전파하거나, 연관관계가 끊어진 자식을 자동 삭제하는 기능입니다.
+
+*   **영속성 전이**(`CascadeType.ALL`): 부모를 저장(`persist`)하거나 삭제(`remove`)할 때 자식도 같이 처리합니다.
+*   **고아 객체**(`orphanRemoval = true`): 부모의 컬렉션에서 자식을 제거(`list.remove()`)하면, DB에서도 해당 자식을 삭제(`DELETE`)합니다.
+
+```java
+// Parent.java (부모 엔티티)
+// 부모 저장/삭제 시 자식 전파 + 리스트에서 제거 시 DB 삭제 (완전한 소유)
+@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+private List<Child> children = new ArrayList<>();
+```
+
+**상세 동작 예시**
+
+**1. "자식도 같이 처리한다"의 의미 (`CascadeType.ALL`)**
+개발자가 자식을 일일이 저장(`em.persist(child)`)할 필요 없이, 부모만 저장하면 됩니다.
+```java
+Parent parent = new Parent();
+Child child = new Child();
+parent.addChild(child);
+
+em.persist(parent); 
+// 결과: 부모가 저장되면서, 자식(Child)도 자동으로 INSERT 쿼리가 나갑니다. (전파)
+```
+
+> **Q. 부모를 지우면 자식도 다 지워지나요? (Delete Query)**
+> 네, `CascadeType.ALL`이나 `REMOVE`가 있으면 부모 삭제 시(`em.remove(parent)`) 자식들도 모두 삭제됩니다.
+>
+> **주의**: JPA는 자식을 **하나씩** 찾아서 지웁니다. 자식이 100명이면 `DELETE` 쿼리가 **100번** 나갈 수 있어 성능에 주의해야 합니다. 
+> (자식이 너무 많으면 JPQL로 한 방에 지우는 게 좋습니다: `delete from Child c where c.parent = :p`)
+
+**2. 영속성 전이만 있고 `orphanRemoval`이 없을 때 (`orphanRemoval=false`)**
+```java
+@OneToMany(cascade = CascadeType.ALL) // 고아 객체 제거 옵션 끔
+List<Child> children;
+...
+// 부모의 리스트에서 자식을 쫓아냄
+parent.getChildren().remove(0); 
+```
+*   **결과**: 자바 컬렉션에서는 사라졌지만, **DB에는 데이터가 그대로 살아있습니다.** (외래키만 Null이 되거나 그대로 유지됨 → **좀비 데이터 발생**)
+*   DB에서도 지우고 싶다면 `orphanRemoval = true`를 꼭 켜야 합니다.
+
+**[주의사항 & 차이점]**
+*   **차이점**: `CascadeType.REMOVE`는 부모를 지울 때만 자식이 지워지지만, `orphanRemoval=true`는 컬렉션에서 `remove()`만 해도 자식이 지워집니다.
+*   **사용 기준**: 자식 엔티티가 **"오직 이 부모에게만 소유될 때"** (소유자가 하나일 때) 사용해야 합니다. (예: 게시글-첨부파일)
+    *   만약 자식이 다른 곳에서도 참조되는 엔티티(예: 관리자가 관리하는 멤버)라면, 함부로 지워져선 안 되므로 사용하면 안 됩니다.
+
+</details>
+
+<details>
+<summary>OSIV (Open Session In View)</summary>
+
+<br>
+
+**OSIV (Open Session In View)**
+영속성 컨텍스트(DB 연결)를 **뷰 레이어(Controller, View Template)까지 열어두는 전략**입니다. 
+
+(Sping Boot 기본값: `true`)
+
+> **Q. 왜 쓰나요? (장점)**
+> **화면 변경에 유연하게 대처할 수 있기 때문입니다.** (생산성 UP)
+>
+> 예를 들어, **"화면에 갑자기 `Team` 이름도 보여주세요!"** 라는 요청이 왔을 때:
+> *   **OSIV OFF**: Service 코드를 열어서 `fetch join` 쿼리를 짜거나 DTO를 만들어 데이터를 다 채워서 보내야 합니다. (화면 때문에 비즈니스 로직 수정)
+> *   **OSIV ON**: Service는 건드릴 필요 없이, 그냥 View/Controller에서 `member.getTeam().getName()` 호출만 하면 알아서 쿼리가 나가서 해결됩니다. (편-안)
+
+```java
+// Controller
+@GetMapping("/members/{id}")
+public String getMember(@PathVariable Long id, Model model) {
+    Member member = memberService.find(id); // 서비스 종료 (트랜잭션 끝)
+    
+    // [OSIV ON]: DB 커넥션이 유지되므로 지연 로딩 가능 (Good for 개발속도)
+    // [OSIV OFF]: 에러 발생 (LazyInitializationException) -> 트랜잭션 없어서 못 가져옴
+    model.addAttribute("teamName", member.getTeam().getName()); 
+    
+    return "memberView";
+}
+```
+
+**동작 방식**
+*   **ON (True)**: 요청이 들어와서 응답이 나갈 때까지 영속성 컨텍스트와 DB 커넥션을 계속 유지합니다.
+    *   **서비스 계층**: 트랜잭션 시작 ~ 종료 (수정 가능)
+    *   **뷰 계층 (Controller)**: **트랜잭션은 끝났지만** 영속성 컨텍스트는 살아있음. (Nontransactional Reads)
+        *   **커넥션**: 계속 붙들고 있음 (반환 X)
+        *   **트랜잭션**: 이미 커밋되어 종료됨 (수정 X, 롤백 X)
+        *   **결과**: 커넥션이 있으니 **단순 조회(Select)는 가능**하지만, 데이터 변경은 반영되지 않음.
+
+    > **Q. 영속성 컨텍스트만 남기고 커넥션은 반환하면 안 되나요?**
+    > **안 됩니다.** 지연 로딩(`Lazy Loading`)의 본질은 **필요할 때 DB에 SQL을 날려 데이터를 가져오는 것**이기 때문입니다.
+    > SQL을 날리려면 **DB 커넥션**이 반드시 필요합니다.
+    >
+    > 커넥션 없이 지연 로딩을 시도하면 `LazyInitializationException`이 발생합니다.
+
+    *   **장점**: `Controller`나 View에서도 지연 로딩(`lazy loading`)이 가능합니다. (`entity.getChild().getName()`)
+    *   **단점**: DB 커넥션을 너무 오래 물고 있습니다. 외부 API 호출 등 시간이 오래 걸리는 작업이 껴있으면 **커넥션 풀 고갈**(Connection Pool Exhaustion)로 장애가 발생할 수 있습니다.
+*   **OFF (False)**: 트랜잭션 종료 시(`Service` 계층 종료 시) 영속성 컨텍스트도 닫고 DB 커넥션을 반환합니다.
+    *   **장점**: DB 커넥션을 짧게 쓰고 반환하므로 실시간 트래픽 처리에 유리합니다.
+    *   **단점**: 모든 지연 로딩 코드를 `Service` 계층 안에서 처리하고, 결과를 DTO로 변환해서 컨트롤러 반환해야 합니다. (`LazyInitializationException` 발생 주의)
+
+> **권장**: 트래픽이 많은 서비스라면 **`spring.jpa.open-in-view: false`** 로 끄는 것이 정석입니다.
+
+</details>
+
+<details>
 <summary>JPA N+1 문제와 해결 방법</summary>
 
 <br>
@@ -1540,33 +1805,154 @@ public class CherrydanApplication {
 > // 결과: 멤버가 100명이면 쿼리가 총 101번(1 + 100) 나감. 💥
 > ```
 
-**해결 방법**
+**해결 방법과 동작 원리**
 
-1.  **Fetch Join (가장 일반적)**
-    -   JPQL을 사용하여 조회 시점에 연관된 데이터를 **한 번에(Left Outer Join)** 가져옵니다.
+### 1. Fetch Join vs 일반 Join
+
+**차이점 요약**
+*   **일반 JOIN**: 연관 Entity를 `JOIN` 하긴 하지만, **SELECT 절에는 포함하지 않습니다.** (조회 주체인 엔티티만 가져옴). 나중에 연관 객체를 쓸 때 쿼리가 다시 나갑니다(지연 로딩).
+*   **Fetch JOIN**: 연관 Entity까지 **SELECT 절에 포함하여 한방에 가져옵니다.** (즉시 로딩 효과). 영속성 컨텍스트에 모두 담깁니다.
+
+**상세 쿼리 비교**
+
+**A. 일반 Join 사용 (`join`)**
+```java
+// TeamRepository.java
+@Query("SELECT distinct t FROM Team t JOIN t.members")
+public List<Team> findAllWithMembersUsingJoin();
+```
+▼ **실행되는 SQL** (SELECT 절에 `member` 컬럼이 없음!)
+```sql
+SELECT
+    distinct t.id,
+    t.name
+FROM team t
+INNER JOIN member m ON t.id = m.team_id
+```
+> **문제**: 쿼리로는 조인을 했지만, 실제 데이터는 `Team`만 가져왔습니다. 이후 `team.getMembers()`를 호출하면 그때마다 Member를 찾는 쿼리가 또 나갑니다.
+
+**B. Fetch Join 사용 (`join fetch`)**
+```java
+// TeamRepository.java
+@Query("SELECT distinct t FROM Team t JOIN FETCH t.members")
+public List<Team> findAllWithMembersUsingFetchJoin();
+```
+▼ **실행되는 SQL** (SELECT 절에 `member`까지 다 긁어옴)
+```sql
+SELECT
+    distinct t.id,
+    t.name,
+    m.id,       -- Member 컬럼1
+    m.name,     -- Member 컬럼2
+    m.age,      -- Member 컬럼3
+    m.team_id   -- Member 컬럼4
+FROM team t
+INNER JOIN member m ON t.id = m.team_id
+```
+> **결과**: `Team`을 조회할 때 `Member` 데이터까지 이미 **영속성 컨텍스트에 다 퍼왔으므로**, 나중에 `getMembers()`를 해도 추가 쿼리가 나가지 않습니다.
+
+**Fetch Join의 한계와 위험성 코드 예시**
+
+1.  **둘 이상의 컬렉션 Fetch Join 불가** (`MultipleBagFetchException`)
     ```java
-    @Query("select m from Member m join fetch m.team")
-    List<Member> findAllJoinFetch();
+    // Team -> Members(1:N) 과 Team -> Orders(1:N) 둘 다 Fetch Join 시도
+    @Query("select t from Team t join fetch t.members join fetch t.orders")
+    List<Team> findAll(); // MultipleBagFetchException 발생! (데이터 뻥튀기 감당 불가)
     ```
 
-2.  **@EntityGraph**
-    -   `fetch join`을 어노테이션으로 간편하게 사용할 수 있습니다.
+2.  **페이징 API 사용 불가** (메모리 경고)
     ```java
-    @EntityGraph(attributePaths = {"team"})
-    @Query("select m from Member m")
-    List<Member> findAllEntityGraph();
+    @Query("select t from Team t join fetch t.members")
+    Page<Team> findAll(Pageable pageable); 
     ```
+    > **실행 시 로그 경고**:
+    > `HHH000104: firstResult/maxResults specified with collection fetch; applying in memory!`
+    > (경고: 너 컬렉션 페치 조인에 페이징 걸었네? **DB에서 페이징 못하니까 100만 건 다 퍼와서 메모리에서 자를게.** -> **서버 다운 위험**)
 
-3.  **Batch Size (`@BatchSize` / global setting)**
-    -   `IN` 절을 사용하여 설정한 개수만큼 묶어서 조회합니다. (100번 나갈 걸 1번으로 줄임)
-    ```yaml
-   # application.yml (전역 설정 권장)
-   spring:
-     jpa:
-       properties:
-         hibernate:
-           default_batch_fetch_size: 1000
+    > **Q. 왜 DB에서 페이징(`LIMIT`)을 못하나요?**
+    > **데이터 뻥튀기** 때문입니다. `1:N` 조인을 하면 부모 데이터가 자식 수만큼 복제되어 행(Row)이 늘어납니다.
+    > 이때 DB에서 `LIMIT 1`을 걸어버리면, 부모(Team)의 일부 자식(Member) 데이터가 짤린 채로 조회되어 **객체 정합성(데이터 누락)**이 깨집니다.
+    >
+    > **[예시: Team A (멤버: 철수, 영희)]**
+    > | Team | Member | 비고 |
+    > | :--- | :--- | :--- |
+    > | **Team A** | 철수 | Row 1 |
+    > | **Team A** | 영희 | Row 2 (**뻥튀기 발생**) |
+    >
+    > 여기서 `LIMIT 1`을 하면 **'철수'만 조회되고 '영희'는 잘려나갑니다.**
+    > Java 객체로는 `Team A`의 멤버가 1명뿐인 것처럼 보이게 되어 **데이터 오류**가 발생합니다.
+
+3.  **별칭(Alias) 사용 불가**
+    -   Fetch Join 대상에게 별칭을 줘서 **"일부만"** 필터링해서 가져오면 객체 정합성이 깨집니다.
+    ```java
+    // ❌ 절대 금지: 팀의 멤버 중 '20살 이상만' 걸러서 팀 엔티티에 담겠다?
+    @Query("select t from Team t join fetch t.members m where m.age > 20")
+    List<Team> findAll(); 
     ```
+    > **이유**: JPA에서 `Team.members`는 "그 팀의 **모든** 멤버"여야 합니다. 일부만 담기면, 나중에 이 Team 객체에서 멤버를 지우거나 추가할 때 데이터가 꼬이게 됩니다.
+
+### 2. @EntityGraph
+
+`join fetch` 쿼리를 직접 짜기 귀찮을 때, 어노테이션으로 해결하는 방법입니다. 내부적으로 **Left Outer Join**을 사용합니다.
+(기본 `join fetch`는 Inner Join이라 연관된 데이터가 없으면 본인 데이터도 조회되지 않지만, **Left Outer Join**은 연관 데이터가 없어도 본인 데이터는 조회되므로 안전합니다.)
+
+```java
+// MemberRepository.java
+@EntityGraph(attributePaths = {"team"}) // member 조회 시 team도 같이 가져와!
+@Query("select m from Member m")
+List<Member> findAllEntityGraph();
+```
+
+▼ **실행되는 SQL**
+```sql
+SELECT
+    m.id, m.name, 
+    t.id, t.name  -- team 정보도 같이 SELECT
+FROM member m
+LEFT OUTER JOIN team t ON m.team_id = t.id
+```
+
+**한계**:
+- 결국 내부적으로 Fetch Join을 쓰는 것이므로, 컬렉션 페치 조인 시 **페이징 문제** 등은 동일하게 발생합니다.
+
+### 3. Batch Size (페이징 해결사)
+
+컬렉션 페치 조인의 페이징 한계를 극복하는 가장 깔끔한 방법입니다. `IN` 절을 사용해 설정한 개수만큼 묶어서 조회합니다.
+
+**설정 방법 1. application.yml (전역 설정 - 권장)**
+```yaml
+spring:
+  jpa:
+    properties:
+      hibernate:
+        default_batch_fetch_size: 1000  # 보통 100~1000 사이 권장
+```
+
+**설정 방법 2. @BatchSize (개별 설정)**
+- **컬렉션 (1:N)**: 필드 위에 붙입니다.
+- **엔티티 (N:1)**: 대상 **클래스 위**에 붙입니다. (예: `Team`이 아니라 `Member` 입장에서 `Team`을 가져올 때)
+
+```java
+@Entity
+@BatchSize(size = 100) // N:1 관계에서 Team을 조회할 때도 배치가 적용됨!
+public class Team {
+    ...
+    @BatchSize(size = 100) // 1:N 관계 (컬렉션 페이징 해결)
+    @OneToMany(mappedBy = "team")
+    private List<Member> members = new ArrayList<>();
+}
+```
+
+▼ **실행되는 SQL (Batch 적용 시)**
+```sql
+-- 1. [컬렉션 1:N] Team -> Members 조회 시
+SELECT * FROM member 
+WHERE team_id IN (1, 2, 3, ..., 100)
+
+-- 2. [엔티티 N:1] Member -> Team 조회 시 (위의 상황 예시 해결)
+SELECT * FROM team 
+WHERE id IN (1, 2, 3, ..., 100)
+```
 
 </details>
 
