@@ -1328,6 +1328,10 @@ Client -> **DispatcherServlet** -> **HandlerMapping** (Controller 찾기) -> **H
     -   `Client` -> `DispatcherServlet` -> `HandlerMapping` -> `HandlerAdapter` -> `Controller` -> **HttpMessageConverter (Jackson)** -> `JSON Response`
     -   *특징: ViewResolver를 거치지 않고, 컨버터가 Body에 데이터를 직접 씁니다.*
 
+> **Tip: Tomcat과 Spring의 경계는 어디인가요?**
+> *   **Tomcat (Servlet Container)**: HTTP 요청을 받고(Socket 연결, 스레드 할당), `Filter`를 거쳐 **DispatcherServlet을 실행**시키는 단계까지 담당합니다.
+> *   **Spring (Spring Container)**: **DispatcherServlet**이 요청을 잡는 순간(`doDispatch()`)부터가 스프링의 영역입니다. 이후 `HandlerMapping`, `Controller` 등을 타고 비즈니스 로직을 수행합니다.
+
 **상세 주요 컴포넌트 역할**
 
 1.  **DispatcherServlet** (Front Controller)
@@ -1570,14 +1574,27 @@ public class CherrydanApplication {
 
 <br>
 
-| 구분          | **Filter** (필터)                                                                                                    | **Interceptor** (인터셉터)                                    |
-| :------------ | :------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------ |
-| **관리자**    | **Web Container (Tomcat)**                                                                                           | **Spring Container**                                          |
-| **위치**      | DispatcherServlet **진입 전**                                                                                        | DispatcherServlet **실행 후** (Controller 호출 전후)          |
-| **용도**      | 보안(XSS/CORS), 인코딩, 이미지/데이터 압축 등 **전역적** 처리                                                        | 인증/인가, API 로깅, 컨트롤러로 넘기는 **데이터 가공**        |
-| **에러 처리** | 스프링 예외 처리(`@ControllerAdvice`) **동작 안 함**. <br> (직접 `try-catch` 하거나 `web.xml` 에러 페이지 설정 필요) | 스프링의 **`@ControllerAdvice`, `@ExceptionHandler` 적용됨**. |
+| 구분          | **Filter** (필터)                                                                                                        | **Interceptor** (인터셉터)                                                                                                                     |
+| :------------ | :----------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
+| **관리자**    | **Web Container (Tomcat)**                                                                                               | **Spring Container**                                                                                                                           |
+| **위치**      | DispatcherServlet **진입 전**                                                                                            | DispatcherServlet **실행 후** (Controller 호출 전후)                                                                                           |
+| **용도**      | 보안(XSS/CORS), 인코딩, 이미지/데이터 압축 등 **전역적** 처리                                                            | 인증/인가, API 로깅, 컨트롤러로 넘기는 **데이터 가공**                                                                                         |
+| **에러 처리** | `DispatcherServlet` 도달 전이라 예외 발생 시 **WAS(Tomcat)까지 올라감**.<br>(`@ControllerAdvice` 불가, `web.xml`로 처리) | `DispatcherServlet`의 **실행 흐름(`doDispatch`) 안**이므로 **Spring이 가로채서 처리함**.<br>(**WAS까지 안 감**, `@ControllerAdvice` 적용 가능) |
 
 > **실행 순서**: 요청 -> `Filter` -> `DispatcherServlet` -> `Interceptor` -> `Controller`
+
+<br>
+<img width="928" height="461" alt="image" src="https://github.com/user-attachments/assets/40c2a3a1-ed93-4f4d-842a-c4347c5ca46a" />
+
+
+**Interceptor의 3가지 호출 시점 (Spring Bean으로 관리됨)**
+1.  **preHandle** (컨트롤러 호출 전 / 정확히는 **핸들러 어댑터 호출 전**)
+    -   `true`면 다음 단계로 진행, `false`면 **더 이상 진행하지 않습니다.**
+    -   `false`인 경우 남은 인터셉터는 물론, **핸들러 어댑터도 호출되지 않고** 요청 처리가 중단됩니다.
+2.  **postHandle** (컨트롤러 호출 후 / 정확히는 **핸들러 어댑터 호출 후**)
+    -   핸들러(컨트롤러)가 정상적으로 실행된 후에 호출됩니다.
+3.  **afterCompletion** (뷰 렌더링 후)
+    -   뷰 렌더링을 포함한 모든 작업이 완료된 이후에 호출됩니다.
 
 </details>
 
