@@ -1314,8 +1314,44 @@ Java는 **무조건 Call by Value** (값에 의한 호출) 입니다.
 <summary>Spring MVC 요청 처리 흐름</summary>
 
 <br>
+<img width="1049" height="459" alt="image" src="https://github.com/user-attachments/assets/8e51314f-352a-4f7b-861c-46e21086854b" />
+<br>
 
 Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **HandlerAdapter** -> **Controller**(비즈니스 로직) -> **ViewResolver** -> View/Data Response
+
+**상세 주요 컴포넌트 역할**
+
+1.  **DispatcherServlet (Front Controller)**
+    -   Spring MVC의 핵심으로, 모든 HTTP 요청을 가장 먼저 받아 적절한 컴포넌트(핸들러, 뷰 등)로 위임합니다.
+    -   `doDispatch()` 메서드에서 전체적인 요청 처리 파이프라인(매핑, 어댑터 실행, 렌더링)을 조율합니다.
+
+2.  **HandlerMapping**
+    -   요청 URL, 메서드 등을 분석하여 **어떤 컨트롤러 메서드가 처리할지**를 찾습니다 (`RequestMappingHandlerMapping`).
+    -   애플리케이션 구동 시점에 `@RequestMapping` 정보를 미리 스캔하여 매핑 레지스트리에 저장해 둡니다.
+
+3.  **HandlerAdapter**
+    -   핸들러(컨트롤러)의 구현 방식에 상관없이 **일관된 방식으로 메서드를 실행**시켜주는 어댑터입니다.
+    -   실제 메서드 실행 시 파라미터 바인딩(`ArgumentResolver`)과 반환값 처리(`ReturnValueHandler`)를 수행합니다.
+
+4.  **@RestController vs @Controller**
+    -   **@Controller**: `View` 렌더링이 주 목적이며, 반환된 이름(String)을 `ViewResolver`가 처리하여 HTML을 응답합니다.
+    -   **@RestController**: `@Controller` + `@ResponseBody` 조합. 객체를 JSON으로 직렬화(`HttpMessageConverter`)하여 **HTTP Body**에 직접 씁니다.
+
+5.  **ViewResolver**
+    -   컨트롤러가 반환한 논리적인 뷰 이름(예: "home")을 **실제 물리적인 뷰 객체**(예: `/WEB-INF/views/home.jsp`)로 변환합니다.
+    -   JSP, Thymeleaf 등 설정된 템플릿 엔진에 맞는 리졸버가 동작합니다.
+
+6.  **ArgumentResolver & ReturnValueHandler**
+    -   **ArgumentResolver**: `@RequestParam`, `@RequestBody` 등 메서드 파라미터 정보를 분석하여 실제 값을 주입해 줍니다.
+    -   **ReturnValueHandler**: 응답 값을 `ModelAndView`로 만들지, JSON 메시지로 변환할지 등을 결정하고 처리합니다.
+
+7.  **@RequestBody & @ResponseBody 동작**
+    -   **@RequestBody**: HTTP 요청 본문(JSON)을 **Jackson 라이브러리**를 통해 자바 객체로 변환합니다.
+    -   **@ResponseBody**: 자바 객체를 JSON으로 변환하여 응답 본문에 작성하며, `HttpMessageConverter`가 관여합니다.
+
+8.  **예외 처리 (Exception Handling)**
+    -   **@ExceptionHandler**: 특정 컨트롤러(또는 전역)에서 발생하는 예외를 잡아 처리합니다.
+    -   **HandlerExceptionResolver**: 예외가 발생했을 때 적절한 에러 응답을 생성하는 전략 인터페이스입니다.
 
 </details>
 
