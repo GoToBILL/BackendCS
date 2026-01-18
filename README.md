@@ -1373,15 +1373,15 @@ Client -> **DispatcherServlet** -> **HandlerMapping** (Controller 찾기) -> **H
 
 <br>
 
-- **IoC** (제어의 역전): 프로그램의 제어 흐름(객체 생성, 생명주기)을 개발자가 아닌 **프레임워크(컨테이너)**가 담당하는 것.
+- **IoC** (제어의 역전): 프로그램의 제어 흐름(객체 생성, 생명주기)을 개발자가 아닌 **프레임워크**(컨테이너)가 담당하는 것.
 - **DI** (의존성 주입): IoC를 구현하는 방법으로, 객체를 직접 생성(`new`)하지 않고 **외부에서 주입**받는 것.
 
 **상세 설명**
 1.  **왜 쓰나요?**: 클래스 간의 **강한 결합도(Coupling)**를 끊어내어 유연한 코드 변경과 **테스트(Mock 객체 주입)**를 쉽게 만들기 위함입니다.
-2.  **Spring Container (`ApplicationContext`)**: 개발자 대신 빈(Bean)을 생성하고, 의존성을 연결해 주고, 초기화 및 소멸(생명주기)까지 관리해 줍니다.
-3.  **권장 방식**: **생성자 주입(Constructor Injection)**.
+2.  **Spring Container** (`ApplicationContext`): 개발자 대신 빈(Bean)을 생성하고, 의존성을 연결해 주고, 초기화 및 소멸(생명주기)까지 관리해 줍니다.
+3.  **권장 방식**: **생성자 주입**(Constructor Injection).
     -   필수 의존성을 강제할 수 있음.
-    -   객체를 `final`로 선언하여 **불변성(Immutability)** 확보 가능.
+    -   객체를 `final`로 선언하여 **불변성**(Immutability) 확보 가능.
     -   순환 참조(Circular Reference) 문제를 애플리케이션 구동 시점에 발견 가능.
 
 </details>
