@@ -1324,9 +1324,16 @@ Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **Ha
 
 <br>
 
-- **IoC**(제어의 역전): 객체의 생명주기 관리를 개발자가 아닌 프레임워크(Container)가 담당.
-- **DI**(의존성 주입): 필요한 의존 객체를 직접 생성하지 않고 외부(Container)에서 주입받음. 결합도를 낮춤.
-- 생성자 주입(Constructor Injection)을 권장 (불변성, 순환참조 방지).
+- **IoC(제어의 역전)**: 프로그램의 제어 흐름(객체 생성, 생명주기)을 개발자가 아닌 **프레임워크(컨테이너)**가 담당하는 것.
+- **DI(의존성 주입)**: IoC를 구현하는 방법으로, 객체를 직접 생성(`new`)하지 않고 **외부에서 주입**받는 것.
+
+**상세 설명**
+1.  **왜 쓰나요?**: 클래스 간의 **강한 결합도(Coupling)**를 끊어내어 유연한 코드 변경과 **테스트(Mock 객체 주입)**를 쉽게 만들기 위함입니다.
+2.  **Spring Container (`ApplicationContext`)**: 개발자 대신 빈(Bean)을 생성하고, 의존성을 연결해 주고, 초기화 및 소멸(생명주기)까지 관리해 줍니다.
+3.  **권장 방식**: **생성자 주입(Constructor Injection)**.
+    -   필수 의존성을 강제할 수 있음.
+    -   객체를 `final`로 선언하여 **불변성(Immutability)** 확보 가능.
+    -   순환 참조(Circular Reference) 문제를 애플리케이션 구동 시점에 발견 가능.
 
 </details>
 
@@ -1335,7 +1342,32 @@ Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **Ha
 
 <br>
 
-생성 -> 의존성 주입 -> 초기화(@PostConstruct) -> 사용 -> 소멸(@PreDestroy)
+**순서**: 객체 생성 -> 의존성 주입 -> 초기화 -> 사용 -> 소멸
+
+1.  **스프링 컨테이너 기동**: 설정 파일을 읽고 등록할 빈들을 파악합니다.
+2.  **객체 생성 (Instantiation)**: 생성자를 호출하여 빈 객체를 메모리에 올립니다.
+3.  **의존성 주입 (Dependency Injection)**: 세터나 필드에 `@Autowired`가 있다면 의존 관계를 연결해 줍니다.
+    *   *(참고: 생성자 주입은 객체 생성 단계에서 동시에 일어납니다.)*
+4.  **초기화 (@PostConstruct)**: 의존성 주입이 끝난 후, 초기 데이터 로딩이나 세팅이 필요한 경우 실행됩니다.
+    *   *Q. 왜 생성자에서 안 하고? A. 생성자 시점엔 의존성 주입이 완벽하지 않을 수 있어서, 안전하게 DI 완료 후에 실행하는 것입니다.*
+5.  **빈 사용 (Usage)**: 애플리케이션이 동작하며 빈이 실제 로직을 수행합니다.
+6.  **소멸 (@PreDestroy)**: 애플리케이션 종료 시 리소스 반납(DB 연결 해제 등)을 위해 실행됩니다.
+
+```java
+@Component
+public class MyBean {
+    
+    @PostConstruct
+    public void init() {
+        System.out.println("의존성 주입 완료 후 실행됩니다.");
+    }
+
+    @PreDestroy
+    public void close() {
+        System.out.println("빈이 소멸되기 직전에 실행됩니다.");
+    }
+}
+```
 
 </details>
 
@@ -1344,8 +1376,50 @@ Client -> **DispatcherServlet** -> **HandlerMapping**(Controller 찾기) -> **Ha
 
 <br>
 
-핵심 로직과 공통 관심사(로깅, 트랜잭션, 보안 등)를 분리하여 모듈화하는 것.
-Spring은 프록시 패턴을 사용하여 AOP를 구현합니다.
+**AOP(관점 지향 프로그래밍)**: 로깅, 트랜잭션, 보안처럼 여러 곳에서 공통적으로 쓰이는 기능(**횡단 관심사**)을 핵심 비즈니스 로직에서 분리하여 재사용하는 기술입니다.
+
+**상세 설명 및 용어**
+스프링은 런타임에 **프록시(Proxy) 객체**를 만들어서 공통 로직을 수행합니다.
+
+1.  **Aspect**: 공통 기능 모듈 그 자체 (예: '로그 출력 기능'). (**Advice** + **Pointcut**)
+2.  **Advice**: **"언제"** 공통 로직을 실행할지 정의 (Before, After, Around 등).
+3.  **Pointcut**: **"어디에"** 적용할지 필터링하는 식 (예: `com.soma.service.*` 패키지의 모든 메서드).
+4.  **JoinPoint**: 적용 **가능한** 모든 지점 (메서드 실행, 생성자 호출 등). 스프링 AOP는 **메서드 실행** 시점만 지원합니다.
+5.  **Weaving**: 핵심 로직에 공통 로직(Advice)을 실제로 끼워 넣는 과정.
+6.  **Proxy**: 타겟 객체를 감싸서 요청을 가로채는 대리자 객체. (JDK Dynamic Proxy / CGLIB)
+
+```java
+@Aspect
+@Component
+public class LoggingAspect {
+    // Pointcut: com.soma.service 패키지 하위의 모든 메서드
+    @Before("execution(* com.soma.service.*.*(..))") // Advice: 메서드 실행 전(Before)
+    public void logBefore(JoinPoint joinPoint) {
+        System.out.println("Method Start: " + joinPoint.getSignature().getName());
+    }
+}
+```
+
+</details>
+
+<details>
+<summary>JDK Dynamic Proxy vs CGLIB (프록시 생성 방식의 차이)</summary>
+
+<br>
+
+Spring AOP가 프록시 객체를 만들 때 사용하는 두 가지 핵심 기술입니다.
+
+| 구분       | **JDK Dynamic Proxy**             | **CGLIB** (Code Generator Library)                                       |
+| :--------- | :-------------------------------- | :----------------------------------------------------------------------- |
+| **대상**   | **인터페이스**가 반드시 있어야 함 | **클래스**만 있어도 가능 (상속 방식)                                     |
+| **기술**   | Java Reflection API 사용          | 바이트코드 조작 (Bytecode manipulation)                                  |
+| **성능**   | 리플렉션을 써서 상대적으로 느림   | 바이트코드를 직접 생성하므로 **더 빠름**                                 |
+| **제약**   | 인터페이스 구현 필수              | `final` 클래스나 `final` 메서드는 오버라이딩 불가하므로 프록시 생성 불가 |
+| **스프링** | 과거 기본값 (인터페이스 O)        | **Spring Boot 2.0부터 기본값** (인터페이스 유무 상관없이 사용)           |
+
+> **요약**:
+> 옛날에는 "인터페이스가 있으면 JDK Proxy, 없으면 CGLIB"를 썼지만,
+> **최근(Spring Boot)**에는 성능 좋고 제약이 적은 **CGLIB**를 기본으로 사용해서 통일성을 유지합니다.
 
 </details>
 
@@ -1363,16 +1437,86 @@ AOP 프록시를 통해 동작합니다.
 </details>
 
 <details>
+<summary>Spring Boot 실행 원리 (@SpringBootApplication과 main)</summary>
+
+<br>
+
+**Q. 왜 `@SpringBootApplication`이 붙은 main 메서드를 실행해야 하나요?**
+
+```java
+@SpringBootApplication  // 핵심 어노테이션
+@EnableScheduling
+@EnableRetry
+public class CherrydanApplication {
+
+    public static void main(String[] args) {
+        // 이 한 줄이 스프링의 모든 마법을 시작합니다.
+        SpringApplication.run(CherrydanApplication.class, args);
+    }
+
+}
+```
+
+1.  **Java의 진입점 (Entry Point)**
+    -   Spring Boot도 결국은 **Java 프로그램**입니다. JVM이 실행할 수 있는 시작점(`public static void main`)이 반드시 필요합니다.
+
+2.  **SpringApplication.run() 의 역할**
+    -   **스프링 컨테이너 생성**: `ApplicationContext`를 생성하여 빈(Bean)들을 관리할 준비를 합니다.
+    -   **내장 서버 실행**: (웹 앱인 경우) 내장된 **Tomcat**을 띄워서 HTTP 요청을 받을 준비를 합니다.
+
+3.  **@SpringBootApplication 의 정체**
+    이 어노테이션은 다음 3가지 핵심 어노테이션을 합친 것입니다.
+    -   `@SpringBootConfiguration`: 스프링 설정 클래스임을 명시.
+    -   `@EnableAutoConfiguration`: **자동 설정**. `jar` 의존성을 보고 "어? JPA가 있네? DB 설정을 자동으로 해줘야지" 하고 빈을 등록해 줍니다.
+    -   `@ComponentScan`: 현재 패키지 하위의 모든 컴포넌트(`@Controller`, `@Service` 등)를 찾아서 빈으로 등록합니다.
+
+</details>
+
+<details>
 <summary>JPA N+1 문제와 해결 방법</summary>
 
 <br>
 
 **N+1 문제**: 1번의 쿼리로 조회한 엔티티와 연관된 엔티티를 조회하기 위해 N번의 추가 쿼리가 발생하는 성능 이슈.
+> **상황 예시 (Team : Member = 1 : N)**
+> ```java
+> // 1. 전체 멤버 조회 (쿼리 1방)
+> List<Member> members = memberRepository.findAll();
+> 
+> // 2. 각 멤버의 팀 이름을 사용할 때마다 추가 쿼리 발생 (N방)
+> for (Member member : members) {
+>     System.out.println(member.getTeam().getName());
+> }
+> // 결과: 멤버가 100명이면 쿼리가 총 101번(1 + 100) 나감. 💥
+> ```
 
-**해결**:
-1. **Fetch Join**: `select m from Member m join fetch m.team` (한 방 쿼리).
-2. **@EntityGraph**: 어노테이션으로 fetch join 효과.
-3. **Batch Size**: `IN` 절을 사용하여 일정 개수만큼 묶어서 조회.
+**해결 방법**
+
+1.  **Fetch Join (가장 일반적)**
+    -   JPQL을 사용하여 조회 시점에 연관된 데이터를 **한 번에(Left Outer Join)** 가져옵니다.
+    ```java
+    @Query("select m from Member m join fetch m.team")
+    List<Member> findAllJoinFetch();
+    ```
+
+2.  **@EntityGraph**
+    -   `fetch join`을 어노테이션으로 간편하게 사용할 수 있습니다.
+    ```java
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findAllEntityGraph();
+    ```
+
+3.  **Batch Size (`@BatchSize` / global setting)**
+    -   `IN` 절을 사용하여 설정한 개수만큼 묶어서 조회합니다. (100번 나갈 걸 1번으로 줄임)
+    ```yaml
+   # application.yml (전역 설정 권장)
+   spring:
+     jpa:
+       properties:
+         hibernate:
+           default_batch_fetch_size: 1000
+    ```
 
 </details>
 
@@ -1381,8 +1525,14 @@ AOP 프록시를 통해 동작합니다.
 
 <br>
 
-- **Filter**: Servlet Container 레벨 (DispatcherServlet 앞). 보안, 인코딩 처리.
-- **Interceptor**: Spring MVC 레벨 (DispatcherServlet 뒤, Controller 앞). 인증, 로깅, 공통 로직 처리.
+| 구분          | **Filter** (필터)                                                                                                    | **Interceptor** (인터셉터)                                    |
+| :------------ | :------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------ |
+| **관리자**    | **Web Container (Tomcat)**                                                                                           | **Spring Container**                                          |
+| **위치**      | DispatcherServlet **진입 전**                                                                                        | DispatcherServlet **실행 후** (Controller 호출 전후)          |
+| **용도**      | 보안(XSS/CORS), 인코딩, 이미지/데이터 압축 등 **전역적** 처리                                                        | 인증/인가, API 로깅, 컨트롤러로 넘기는 **데이터 가공**        |
+| **에러 처리** | 스프링 예외 처리(`@ControllerAdvice`) **동작 안 함**. <br> (직접 `try-catch` 하거나 `web.xml` 에러 페이지 설정 필요) | 스프링의 **`@ControllerAdvice`, `@ExceptionHandler` 적용됨**. |
+
+> **실행 순서**: 요청 -> `Filter` -> `DispatcherServlet` -> `Interceptor` -> `Controller`
 
 </details>
 
