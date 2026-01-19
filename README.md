@@ -1603,11 +1603,58 @@ Spring AOP가 프록시 객체를 만들 때 사용하는 두 가지 핵심 기�
 
 <br>
 
-AOP 프록시를 통해 동작합니다.
-1. 메서드 호출 시 프록시가 가로챔.
-2. 트랜잭션 시작 (AutoCommit off).
-3. 실제 메서드 실행.
-4. 성공 시 Commit, 예외 발생(Runtime Exception) 시 Rollback.
+AOP **프록시(Proxy) 객체**를 통해 동작합니다.
+
+**핵심 원리**:
+1.  **프록시 생성**: 스프링은 `@Transactional`이 붙은 빈을 발견하면, 해당 클래스를 상속받은 **가짜 객체**(Proxy)를 생성하여 컨테이너에 등록합니다. (주입받는 놈도 이 프록시를 받음)
+2.  **호출 가로채기**: 외부에서 메서드를 호출하면 프록시가 먼저 받습니다. (Intercept)
+3.  **트랜잭션 처리 흐름**:
+    -   `TransactionManager`에게 **트랜잭션 시작** 요청 (`conn.setAutoCommit(false)`)
+    -   **실제 객체의 메서드 호출** (비즈니스 로직 수행)
+    -   **성공 시**: `commit()`
+    -   **예외 발생 시** (RuntimeException): `rollback()`
+    -   **종료**: 커넥션 반납 및 트랜잭션 종료
+    
+    ```java
+    // [우리가 짠 실제 서비스 코드]
+    @Service
+    public class MemberService {
+        @Transactional // <- 이거 때문에 프록시가 탄생함
+        public void join(Member member) {
+            memberRepository.save(member);
+        }
+    }
+
+    // [컨트롤러: 실제 사용]
+    @Controller
+    public class MemberController {
+        private final MemberService memberService; // <- 여기엔 실제 객체 대신 '프록시(가짜)'가 주입됨!
+        
+        public void request() {
+            memberService.join(member); // 프록시의 join()이 먼저 호출됨
+        }
+    }
+    
+    // [스프링이 만든 프록시 코드 (가상)]
+    public class MemberServiceProxy extends MemberService {
+        public void join(Member member) {
+            try {
+                // 1. 트랜잭션 시작
+                txManager.begin();
+                
+                // 2. 실제 객체 호출 (위임)
+                super.join(member);
+                
+                // 3. 성공 시 커밋
+                txManager.commit();
+            } catch (Exception e) {
+                // 4. 실패 시 롤백
+                txManager.rollback();
+                throw e;
+            }
+        }
+    }
+    ```
 
 </details>
 
