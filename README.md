@@ -1774,14 +1774,14 @@ public class TxAspect { ... }
 ```
 
 > **주의! 하나의 Aspect 클래스 안에 여러 Advice가 있다면?**
-> *   **순서 보장 불가**: 같은 클래스 내의 메서드끼리는 `@Order`를 붙여도 순서가 보장되지 않습니다.
+> *   **순서 보장 불가**: 같은 클래스 내에서 **동일한 타입의 Advice(예: `@Around`가 여러 개)**끼리는 순서가 보장되지 않습니다.
 > *   **해결책**: 순서가 중요하다면 무조건 **별도의 Aspect 클래스**로 쪼개야 합니다.
+> *   (참고: **`@Around` (가장 바깥)** -> `@Before` -> `@After` 등 정해진 감싸기 순서가 있습니다.)
 
 </details>
 
 <details>
 <summary>Spring Boot 실행 원리 (@SpringBootApplication과 main)</summary>
-
 <br>
 
 **Q. 왜 `@SpringBootApplication`이 붙은 main 메서드를 실행해야 하나요?**
