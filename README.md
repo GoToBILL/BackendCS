@@ -1596,6 +1596,37 @@ Spring AOP가 프록시 객체를 만들 때 사용하는 두 가지 핵심 기�
 > 1.  **Code Generation**: 런타임에 타겟 클래스를 상속받는 **새로운 클래스의 바이트코드를 메모리상에서 직접 생성**해버립니다.
 > 2.  **직접 호출**: 리플렉션처럼 "이름으로 메서드 찾기 -> 호출" 하는 비용 없이, 바이트코드 레벨에서 **부모 메서드를 직접 호출(`super.method()`)** 하도록 연결해두기 때문에 훨씬 빠릅니다.
 
+**스프링은 언제 프록시를 만드나요? (BeanPostProcessor)**
+스프링 컨테이너 초기화 시 **BeanPostProcessor** (빈 후처리기)가 개입합니다.
+1.  **생성**: 스프링이 `MemberService` 객체를 생성 (`new`).
+2.  **후처리**: 빈 후처리기가 `"어? 얘 @Transactional 있네?"` 하고 감지.
+3.  **프록시 생성 (CGLIB)**: **ASM** 라이브러리를 통해 `MemberService`를 상속받는 `MemberService$$EnhancerBySpringCGLIB` 클래스(바이트코드)를 메모리에 생성.
+4.  **교체(Replace)**: 스프링 컨테이너에 원래 객체 대신 **프록시 객체**를 등록. (그래서 컨트롤러는 프록시를 주입받음)
+
+**왜 CGLIB가 더 빠른가요? (FastClass)**
+*   **리플렉션 (JDK Proxy)**: 메서드를 호출할 때마다 "**이 메서드 어디 있지?**" 하고 메타데이터를 **찾는 과정**(Lookup)이 필요합니다.
+*   **CGLIB (FastClass)**: 프록시 생성 시, 메서드 호출 경로를 **인덱스(번호)로 매핑**해둔 FastClass라는 것을 같이 만듭니다.
+    *   예: "1번 메서드 호출해" -> `switch(1) { case 1: ((MemberService)target).join(); }`
+    *   **찾는 과정 없이** 바로 해당 메서드를 호출하므로 훨씬 빠릅니다.
+
+``` java
+public class MemberService$$FastClassByCGLIB$$abc {
+    // 메서드별 인덱스 번호 부여
+    private static final int JOIN = 1;
+    private static final int FINDBYID = 2;
+    private static final int UPDATE = 3;
+    
+    public Object invoke(int methodIndex, Object target, Object[] args) {
+        switch (methodIndex) {  // switch문으로 직접 점프! ⚡
+            case JOIN: return ((MemberService) target).join(args);
+            case FINDBYID: return ((MemberService) target).findById(args);
+            case UPDATE: return ((MemberService) target).update(args);
+        }
+    }
+}
+
+```
+
 </details>
 
 <details>
@@ -1635,26 +1666,116 @@ AOP **프록시(Proxy) 객체**를 통해 동작합니다.
         }
     }
     
-    // [스프링이 만든 프록시 코드 (가상)]
+    // [스프링이 만든 프록시 코드 (실제 동작 방식)]
     public class MemberServiceProxy extends MemberService {
+        // 이 안에 트랜잭션 Advisor 등이 들어있음
+        private MethodInterceptor interceptor; 
+
         public void join(Member member) {
-            try {
-                // 1. 트랜잭션 시작
-                txManager.begin();
-                
-                // 2. 실제 객체 호출 (위임)
-                super.join(member);
-                
-                // 3. 성공 시 커밋
-                txManager.commit();
-            } catch (Exception e) {
-                // 4. 실패 시 롤백
-                txManager.rollback();
-                throw e;
-            }
+            // "나는 껍데기일 뿐, 실제 일은 인터셉터(Advisor)에게 넘긴다!"
+            interceptor.intercept(this, "join", member);
+            
+            // -> 인터셉터가 [트랜잭션 시작 -> 실제 join 호출 -> 커밋] 과정을 수행함
         }
     }
     ```
+
+</details>
+
+</details>
+
+</details>
+
+<details>
+<summary>스프링 AOP와 프록시의 모든 것 (동작 원리 완전 정복)</summary>
+
+<br>
+
+**1. 프록시 생성 (초기화 시점)**
+스프링 컨테이너가 뜰 때 **BeanPostProcessor** (빈 후처리기)가 작동합니다.
+*   **감지**: `@Transactional`이나 `@Aspect`가 붙은 빈을 **리플렉션**으로 찾아냅니다.
+*   **생성**: **ASM**을 이용해 해당 클래스를 상속받은 "**가짜 객체** (Proxy)"를 만들고, 원래 객체 대신 컨테이너에 등록합니다. (DI도 이 프록시가 받음)
+
+**2. 프록시 구조 (메모리)**
+프록시 객체는 내부에 **Interceptor**를 가지고 있고, 이 인터셉터는 **Advisor 목록**을 가지고 있습니다.
+*   **Advisor**: `Pointcut` + `Advice` 한 세트. (`@Aspect` 클래스 안의 메서드(`@Around`) 하나하나가 각각의 Advisor로 변환됨)
+
+**3. 실행 흐름 (런타임)**
+클라이언트가 메서드를 호출하면 다음과 같은 과정이 일어납니다.
+
+> **Client** -> **Proxy** -> **Advisor 1** -> **Advisor 2** -> **Target** (실제 객체)
+
+```java
+// [1. 프록시] (껍데기 - CGLIB가 만든 자식 클래스)
+// "난 껍데기야. 인터셉터한테 토스!"
+public class MemberService$$EnhancerBySpringCGLIB extends MemberService {
+    private MethodInterceptor interceptor; // Advisor들이 여기 들어있음
+
+    public void join(Member member) {
+        interceptor.intercept(this, "join", member);
+    }
+}
+
+// [2. 어드바이저] (중간 관리자)
+// "트랜잭션 열고 다음 타자 넘겨!"
+class TransactionAdvisor {
+    public void invoke(Chain chain) {
+        txManager.begin(); // [Before]
+        
+        // 다음 타자(Advisor 또는 Target) 호출
+        chain.proceed();   
+        
+        txManager.commit(); // [After]
+    }
+}
+
+// [3. 체인의 끝] (실제 객체 호출 - CGLIB 방식)
+class CglibMethodInvocation {
+    private MethodProxy methodProxy; // FastClass 정보를 가지고 있는 녀석!
+    
+    public Object proceed() {
+        if (advisorIndex == advisors.size() - 1) {
+            // [Final Destination]
+            // 리플렉션 없이 FastClass를 이용해 타겟 메서드 호출
+            return methodProxy.invoke(target, args); 
+        }
+        // ... 다음 Advisor 실행
+    }
+}
+
+// [4. FastClass] (도우미 - 리플렉션 없이 메서드 호출)
+// methodProxy.invoke()가 호출되면 내부적으로 이 클래스의 invoke()가 실행됩니다.
+public class MemberService$$FastClassBySpringCGLIB {
+    public Object invoke(int index, Object target, Object[] args) {
+        // 인덱스(번호)로 메서드를 바로 찾아서 실행! (Lookup 비용 0)
+        switch (index) { 
+            case 1: return ((MemberService) target).join(args[0]);
+            case 2: return ((MemberService) target).findById(args[0]);
+            default: return null;
+        }
+    }
+}
+
+
+
+```
+
+**4. 순서 제어**
+`@Order` 어노테이션으로 Advisor의 실행 순서를 정할 수 있습니다. (숫자가 낮을수록 바깥쪽)
+
+```java
+@Aspect
+@Order(1) // 먼저 실행 (바깥쪽)
+public class LogAspect { ... }
+
+@Aspect
+@Order(2) // 나중에 실행 (안쪽)
+public class TxAspect { ... }
+```
+
+> **주의! 하나의 Aspect 클래스 안에 여러 Advice가 있다면?**
+> *   **순서 보장 불가**: 같은 클래스 내의 메서드끼리는 `@Order`를 붙여도 순서가 보장되지 않습니다.
+> *   **해결책**: 순서가 중요하다면 무조건 **별도의 Aspect 클래스**로 쪼개야 합니다.
 
 </details>
 
