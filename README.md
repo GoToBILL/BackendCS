@@ -1228,6 +1228,8 @@ final V putVal(K key, V value, boolean onlyIfAbsent) {
   1. `equals()`가 `true`이면, 두 객체의 `hashCode()`는 반드시 같아야 함.
   2. `hashCode()`가 같다고 해서 `equals()`가 반드시 `true`일 필요는 없음 (해시 충돌).
   - equals를 재정의할 때 hashCode를 재정의하지 않으면, 같은 값을 가진 객체가 해시 컬렉션(HashMap, HashSet)에서 다른 객체로 취급되어 값을 찾지 못하는 오동작 발생.
+ 
+HashMap 키 비교는 hashCode 먼저, 같으면 equals() 비교합니다.
 
 </details>
 
