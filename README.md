@@ -2350,11 +2350,11 @@ Stateless한 인증 방식. 서버 저장소 없이 토큰 자체에 정보를 �
 <br>
 
 - **CI/CD**: 지속적 통합 및 배포 자동화 파이프라인.
-    *   **CI (Continuous Integration, 지속적 통합)**: 
-        *   개발자가 코드를 푸시하면 -> 자동으로 **빌드(Build) & 테스트(Test)**를 수행하여 문제없음을 검증하고 메인 브랜치에 통합하는 과정.
+    *   **CI** (Continuous Integration, 지속적 통합): 
+        *   개발자가 코드를 푸시하면 -> 자동으로 **빌드(Build) & 테스트**(Test)를 수행하여 문제없음을 검증하고 메인 브랜치에 통합하는 과정.
         *   핵심: **"버그를 조기에 발견하고 해결"** (Github Actions, Jenkins)
-    *   **CD (Continuous Deployment, 지속적 배포)**:
-        *   통합된 코드를 자동으로 운영 서버에 **배포(Deploy)**하는 과정.
+    *   **CD** (Continuous Deployment, 지속적 배포):
+        *   통합된 코드를 자동으로 운영 서버에 **배포**(Deploy)하는 과정.
         *   핵심: **"개발 생산성 증대 & 빠른 고객 피드백 반영"** (AWS CodeDeploy, Blue/Green 무중단 배포)
 
 - **Docker (vs VM)**: 애플리케이션 실행 환경을 격리하는 **컨테이너** 기술.
